@@ -1,0 +1,669 @@
+/*****************************************************
+This program was produced by the JJH, KYY and Johnadan
+CodeWizardAVR V2.05.0 Professional
+Automatic Program Generator
+� Copyright 1998-2010 Pavel Haiduc, HP InfoTech s.r.l.
+http://www.hpinfotech.com
+
+Project : 2018 ������ǰ 12�� - S.P.A glove
+Version : 1.0.0
+Date    : 2018-05-03
+Author  : JJH
+Company : Chungnam National University
+Comments: Holy Fucking Shit...
+
+
+Chip type               : Atmega128
+AVR Core Clock frequency: 16.000000 MHz
+*****************************************************/
+
+#include <mega128.h>
+#include <delay.h>
+#include <stdio.h>
+
+// Alphanumeric LCD Module functions
+#include <lcd.h>
+#asm
+ .equ __lcd_port = 0x12 //PORTD 8
+#endasm
+// About ADC
+#define ADC_VREF_TYPE 0x60
+#define NUM_SAMP  50  //MUST be Under 255
+//About Switch
+#define Left_switch_on    (!PINE.1)
+#define Middle_switch_on  (!PINE.2)
+#define Right_switch_on   (!PINE.3)
+#define Left_switch_off   (PINE.1)
+#define Middle_switch_off (PINE.2)
+#define Right_switch_off  (PINE.3)
+//About order
+#define Up_thumb    (!PINA.0)
+#define Down_thumb  (!PINA.1)
+#define Up_index    (!PINA.2)
+#define Down_index  (!PINA.3)
+#define Up_middle   (!PINA.4)
+#define Down_middle (!PINA.5)
+#define Up_rest     (!PINA.6)
+#define Down_rest   (!PINA.7)
+
+#define NO_SIGNAL_tu (PINA.0)
+#define NO_SIGNAL_td (PINA.1)
+#define NO_SIGNAL_iu (PINA.2)
+#define NO_SIGNAL_id (PINA.3)
+#define NO_SIGNAL_mu (PINA.4)
+#define NO_SIGNAL_md (PINA.5)
+#define NO_SIGNAL_ru (PINA.6)
+#define NO_SIGNAL_rd (PINA.7)
+
+//About u saturation
+#define UPPER   100
+#define LOWER   -100
+//About RUN
+#define INITIATE  TIMSK = 0x14, ETIMSK = 0x14   //TIM1_COMPA interrupt on, TIM1_OVF interrupt on (Inlet Valve control)
+                                                //TIM3_COMPA interrupt on, TIM3_OVF interrupt on (Outlet Valve control)
+
+#define TERMINATE TIMSK = 0x00, ETIMSK = 0x00   //TIM1_COMPA interrupt off, TIM1_OVF interrupt off (Inlet Valve control)
+                                                //TIM3_COMPA interrupt off, TIM3_OVF interrupt off (Outlet Valve control)
+//*****************************************************************************************************************
+// ****** Declare your global variables here  ******
+unsigned char sam_num = 0; // counting variable for ADC interrupt
+int i,j,k;
+//*****************************************************************************************************************
+// LCD
+unsigned char lcd_data[40];
+//*****************************************************************************************************************
+// ADC
+//unsigned char adc_data[4][100] = {0}; //adc �� IR/�з¼���/cds���� ������
+unsigned char mux = 0;
+//unsigned char NUM_SAMP = 50;
+unsigned char d_flag = 0;
+
+// * PSD
+unsigned char dist_data[2][NUM_SAMP] = {0}; //adc��ȯ ���� PSD���� �����Ǵ� �迭
+unsigned int dist_sum[2]={0};
+unsigned char dist_mean[2]={0};
+unsigned char dist_max[2] = {0, 0}; //tuning���� �ִ밪 �� �ּҰ��� �ֱ� ���� �迭
+unsigned char dist_min[2] = {255, 255};
+
+// * Pressure
+unsigned char pressure_data[4][NUM_SAMP] = {0}; //adc �� �з¼������� ������
+unsigned int pressure_sum[4] = {0};
+unsigned char pressure_mean[4] = {0};
+unsigned char pressure_max[4] = {0, 0, 0, 0}; //tuning���� �ִ밪 �� �ּҰ��� �ֱ� ���� �迭
+unsigned char pressure_min[4] = {255, 255, 255, 255};
+
+// * Flex
+unsigned char flex_data[4][NUM_SAMP] = {0}; //adc �� �з¼������� ������
+unsigned int flex_sum[4] = {0};
+unsigned char flex_mean[4] = {0};
+unsigned char flex_max[4] = {0, 0, 0, 0}; //tuning���� �ִ밪 �� �ּҰ��� �ֱ� ���� �迭
+unsigned char flex_min[4] = {255, 255, 255, 255};
+// Moving
+unsigned char E_flag=0; //EXTENSION : 1
+unsigned char F_flag=0; //FLEXTION : 1
+unsigned char Global_Sequence=0;
+// PID
+unsigned int in_desire;
+unsigned int out_desire;
+unsigned char kp=0.0001;
+unsigned char ki=0.0000;
+unsigned char kd=0.0000;
+float error_old=0;
+float error_sum=0;
+unsigned char ang_desired=0;
+unsigned char ang_old[4]={0};//최초각도는 0도
+unsigned char delta_ang=10;//한 시퀀스당 10도 변화(실험하면서 결정할것)
+unsigned char Ts=50; //ms단위의 제어시퀀스 간격
+//*****************************************************************************************************************
+// Timer 1 Controls INLET!!
+// Timer1 output compare A interrupt service routine
+interrupt [TIM1_COMPA] void timer1_compa_isr(void)
+{
+  PORTC = 0x01<<Global_Sequence;//INLET Valve on
+}
+// Timer1 overflow A interrupt service routine
+interrupt [TIM1_OVF] void timer1_ovf_isr(void)
+{
+  PORTC=0x00;//INLET Valve off
+}
+// Timer 3 Controls OUTLET!!
+// Timer3 overflow B interrupt service routine
+interrupt [TIM3_COMPB] void timer3_compa_isr(void)
+{
+  PORTC = 0x10<<Global_Sequence;//OUTLET Valve on
+}
+// Timer1 output compare A interrupt service routine
+interrupt [TIM3_OVF] void timer3_ovf_isr(void)
+{
+  PORTC=0x00;//OUTLET Valve off
+}
+// ********************************* ADC interrupt service routine ************************************************
+interrupt [ADC_INT] void adc_isr(void)
+{
+    // Read the AD conversion result
+    //for (h = 0; h<=6; h++);
+    //ADC���� high���� ������
+    if(mux>4)           flex_data[mux-4][sam_num] = ADCH;   // 4, 5, 6, 7
+    else                pressure_data[mux][sam_num] = ADCH;     // 0, 1, 2, 3
+    //ADC sampling
+    if(sam_num == NUM_SAMP)
+    {
+        mux++;
+        sam_num=0;
+        d_flag=1;
+    }
+
+    mux &= 0x07;  //mux : 0~7
+    ADMUX = mux | 0x60;
+    ADCSRA |= 0x40;
+    sam_num++;
+}
+
+// ******************************** About Pressure Sensor *******************************************************
+void mean_pressure(unsigned char sequence)
+{
+    unsigned char num = 0; // counting variable for function
+    while(!d_flag);
+    for(num = 0; num < NUM_SAMP; num++)
+        pressure_sum[sequence] += pressure_data[sequence][num];
+    pressure_mean[sequence] = pressure_sum[sequence]/NUM_SAMP;
+    pressure_sum[sequence] = 0;
+    d_flag=0;
+}
+//Pressure test
+void pressure_test(void)
+{
+    unsigned char num = 0;
+    delay_ms(300);
+
+    while(Middle_switch_off)
+    {
+        for(i=0;i<4;i++)
+          mean_pressure((unsigned char)i);
+
+        lcd_clear();
+        lcd_gotoxy(0, 0);
+        lcd_putsf("Testing");
+
+        if(Left_switch_on)  num++;
+        if(Right_switch_on) num--;
+        if(num>3) num=3;
+
+        lcd_gotoxy(0, 1);
+        sprintf(lcd_data, "%d", num);
+        lcd_puts(lcd_data);
+        lcd_gotoxy(4, 1);
+        sprintf(lcd_data, "%d", pressure_mean[num]);
+        lcd_puts(lcd_data);
+
+        delay_ms(200);
+    }
+}
+
+// Pressure tuning
+void pressure_tuning(void)
+{
+    unsigned char num = 0;
+    delay_ms(500);
+
+    while(Middle_switch_off)
+    {
+        for(i=0;i<4;i++)
+          mean_pressure((unsigned char)i);
+
+        lcd_clear();
+        lcd_gotoxy(0, 0);
+        lcd_putsf("Tunning");
+
+        if(Left_switch_on)  num++;
+        if(Right_switch_on) num--;
+        if(num>3) num=3;
+
+        if(pressure_mean[num]>pressure_max[num])  pressure_max[num]=pressure_mean[num];
+        if(pressure_mean[num]<pressure_min[num])  pressure_min[num]=pressure_mean[num];
+
+        lcd_gotoxy(0, 7);
+        sprintf(lcd_data, "%d", num);
+        lcd_puts(lcd_data);
+        lcd_gotoxy(0, 1);
+        sprintf(lcd_data, "%d", pressure_min[num]);
+        lcd_puts(lcd_data);
+        lcd_gotoxy(4, 1);
+        sprintf(lcd_data, "%d", pressure_max[num]);
+        lcd_puts(lcd_data);
+
+        delay_ms(100);
+    }
+}
+
+// ******************************** About Flex Sensor *******************************************************
+void mean_flex(unsigned char sequence)
+{
+    unsigned char num = 0; // counting variable for function
+    while(!d_flag);
+    for(num = 0; num < NUM_SAMP; num++)
+        flex_sum[sequence] += flex_data[sequence][num];
+    flex_mean[sequence] = flex_sum[sequence]/NUM_SAMP;
+    flex_sum[sequence] = 0;
+    d_flag=0;
+}
+//Pressure test
+void flex_test(void)
+{
+    unsigned char num = 0;
+    delay_ms(300);
+
+    while(Middle_switch_off)
+    {
+        for(i=0;i<4;i++)
+          mean_flex((unsigned char)i);
+
+        lcd_clear();
+        lcd_gotoxy(0, 0);
+        lcd_putsf("Testing");
+
+        if(Left_switch_on)  num++;
+        if(Right_switch_on) num--;
+        if(num>3) num=3;
+
+        lcd_gotoxy(0, 1);
+        sprintf(lcd_data, "%d", num);
+        lcd_puts(lcd_data);
+        lcd_gotoxy(4, 1);
+        sprintf(lcd_data, "%d", flex_mean[num]);
+        lcd_puts(lcd_data);
+
+        delay_ms(200);
+    }
+}
+
+// flex tuning
+void flex_tuning(void)
+{
+    unsigned char num = 0;
+    delay_ms(500);
+
+    while(Middle_switch_off)
+    {
+        for(i=0;i<4;i++)
+          mean_flex((unsigned char)i);
+
+        lcd_clear();
+        lcd_gotoxy(0, 0);
+        lcd_putsf("Tunning");
+
+        if(Left_switch_on)  num++;
+        if(Right_switch_on) num--;
+        if(num>3) num=3;
+
+        if(flex_mean[num]>pressure_max[num])  flex_max[num]=pressure_mean[num];
+        if(flex_mean[num]<pressure_min[num])  flex_min[num]=pressure_mean[num];
+
+        lcd_gotoxy(0, 7);
+        sprintf(lcd_data, "%d", num);
+        lcd_puts(lcd_data);
+        lcd_gotoxy(0, 1);
+        sprintf(lcd_data, "%d", flex_min[num]);
+        lcd_puts(lcd_data);
+        lcd_gotoxy(4, 1);
+        sprintf(lcd_data, "%d", flex_max[num]);
+        lcd_puts(lcd_data);
+
+        delay_ms(100);
+    }
+}
+
+// ******************************** About PWM control *******************************************************
+void check_pwm(void)
+{
+    unsigned int temp = 350;//PWM interrupt control
+    delay_ms(100);
+
+    while(Middle_switch_off)
+    {
+        if(Left_switch_on)  temp+=10;
+        if(Right_switch_on)  temp-=10;
+        if(temp<=0) temp=0;
+        if(temp>=ICR1)  temp=ICR1;
+        // 솔레노이드 밸브 오기전까지 LED로 테스트
+        OCR1AH = temp>>8;
+        OCR1AL = temp;
+        lcd_clear();
+        lcd_gotoxy(0, 0);
+        lcd_putsf("TEST");
+        lcd_gotoxy(0, 1);
+        sprintf(lcd_data, "%d", temp);
+        lcd_puts(lcd_data);
+
+        delay_ms(100);
+    }
+}
+
+// ******************************** About PWM control *******************************************************
+void PUMP_test()
+{
+    unsigned int temp = 350;//PWM interrupt control
+    delay_ms(100);
+
+    while(Middle_switch_off)
+    {
+        if(Left_switch_on)  temp+=10;
+        if(Right_switch_on)  temp-=10;
+        if(temp<=0) temp=0;
+        if(temp>=ICR1)  temp=ICR1;
+
+        OCR1BH = temp>>8;
+        OCR1BL = temp;
+        lcd_clear();
+        lcd_gotoxy(0, 0);
+        lcd_putsf("TEST");
+        lcd_gotoxy(0, 1);
+        sprintf(lcd_data, "%d", temp);
+        lcd_puts(lcd_data);
+
+        delay_ms(100);
+    }
+}
+
+// ******************************** About Order *******************************************************
+unsigned char order(unsigned char sequence)
+{
+    if(Up_thumb||Up_index||Up_middle||Up_rest)
+    {
+      //EXTENSION;
+      E_flag=1;
+      F_flag=0;
+    }
+    if(Down_thumb||Down_index||Down_middle||Down_rest)
+    {
+      //FLEXTION;
+      E_flag=0;
+      F_flag=1;
+    }
+    if(NO_SIGNAL_tu||NO_SIGNAL_td||NO_SIGNAL_iu||NO_SIGNAL_id||NO_SIGNAL_mu||NO_SIGNAL_md||NO_SIGNAL_ru||NO_SIGNAL_rd)
+    {
+      E_flag=0;
+      F_flag=0;
+    }
+    // sequence 0 : Thumb   PC0, PC4 on, PORTC = 0x11
+    // sequence 1 : Index   PC1, PC5 on, PORTC = 0x22
+    // sequence 2 : Middle  PC2, PC6 on, PORTC = 0x44
+    // sequence 3 : Rest    PC3, PC7 on, PORTC = 0x88
+    //PORTC = 0x11<<sequence;
+    sequence++;
+    if(sequence>3)  sequence=0;
+    return sequence;
+}
+
+void test_order()
+{
+    unsigned char sequence=0;
+
+    delay_ms(100);
+    while(Middle_switch_on)
+    {
+      sequence=order(sequence);
+      delay_ms(100);//시퀀스 간격
+    }
+}
+
+//*********************************%%%&&&&&&&&&&&&&&&&&&&&&&&%%%***************************************
+//*********************************%%% About Actual Movement %%%***************************************
+//*********************************%%%%%%%%%%%%%%%%%%%%%%%%%%%%%***************************************
+
+// Moving fingers
+void Move_finger(unsigned char P, unsigned char Bend)
+{
+  unsigned char threshold;//Bend에 따라 능동적으로 변하는 기준치
+  unsigned char Grab=0;//1이면 물체를 집은것(더이상 구부리지 않음)
+  unsigned char E_OR_F;
+  float r=0;//r=out_desire/in_desire
+  float u=0;
+  float error=0;
+
+  /***Bend에 대해서 기술된 threshold에 대한 식을 넣으시오!!!***/
+
+  // Grab or not?
+  if(P>=threshold)  Grab=1;//기준치 이상이면 더이상 구부리지X
+  else Grab=0;//기준치 이하인 경우 구부릴 수 있음
+
+  //각도 업데이트
+  E_OR_F = ((E_flag==1?-1:1)+(F_flag==1?1:-1))/2;//Extension:1, Flextion:-1, Do noting:0
+  ang_desired = Bend+E_OR_F*delta_ang;
+  error = ang_desired-ang_old;
+  error_sum += error;
+  u = kp*error + ki*error_sum*(Ts/1000.) + kd*(error-error_old)/(Ts/1000.);//얘를 사용해서 OCR1A,OCR3A를 조절
+
+  //Saturation condition...
+  if(u>UPPER)  u=UPPER;
+  else if(u<LOWER)  u=LOWER;
+
+  // Input update
+  r = ((E_flag==1?0.2:1)+(F_flag==1?1.8:1))/2 //Extension일때 r=0.6, 암것도안할때 r=1, Flextion일때 r=1.4 (비율은 실험적으로 결정할 것)
+  in_desire = 아몰랑 시발ㅋㅋㅋ;
+  out_desire = r*in_desire;
+
+  //행위 정의
+  OCR1A = in_desire;
+  if(!Grab)//계속 움직일 수 있음  
+  {
+    OCR3AH = out_desire>>8;
+    OCR3AL = out_desire;
+  }
+    
+  else//계속해서 움직일 수 없음
+    OCR3A = OCR1A;//동적 평형상태유지
+
+  /*
+  if(!Grab)//물체를 집지않음
+  {
+    if(!E_flag||!F_flag)//아무런 동작 없음
+      return;
+
+    else//구부리거나 펴거나
+    {
+      OCR1A = in_desire;
+      OCR3A = out_desire;
+    }
+  }
+  else//물체를 집음
+  {
+    if(E_flag)//손가락을 펴는 상황
+    {
+      OCR1A = in_desire;
+      OCR3A = out_desire;
+    }
+    else
+      return;
+  }
+  */
+}
+
+// About Daily mode
+void RUN_daily()
+{
+  unsigned char seq=0;
+  float ANG[4]={0};
+
+  delay_ms(100);
+  while(Middle_switch_on)
+  {
+    INITIATE; //초기화, 타이머 인터럽트 켬
+
+    seq = order(seq); // 시퀀스마다 입력 받아옴(검지부터 시작)
+    Global_Sequence = seq;
+    delay_ms(Ts);//시퀀스 간격
+
+    mean_pressure(seq);
+    mean_flex(seq);
+    ANG[seq] = flex_mean[seq]/(flex_max[seq]-flex_min[seq])*90.;//허용각도0~90도
+
+    Move_finger(pressure_mean[seq], ANG[seq]);
+    ang_old[seq]=ANG[seq];
+  }
+
+  TERMINATE; // 타이머 인터럽트 끔
+  E_flag=0;
+  F_flag=0;
+  Global_Sequence=0;
+}
+
+
+
+// ********************************************* main ******************************************************************
+void main(void)
+{
+// Declare your local variables here
+// menu
+unsigned char menu = 0;
+unsigned char menu_Max = 6;
+
+// PA0~7 : Control switch
+PORTA=0xFE;
+DDRA=0xFF;
+// PB6 : Pump
+PORTB=0x00;
+DDRB=0xFF;
+// PC0~3 : Inlet Valve
+// PC4~7 : Outlet Valve
+PORTC=0x00;
+DDRC=0xFF;
+// PD0~7 : LCD
+PORTD=0x00;
+DDRD=0xFF;
+// PE0 : EMERGENCY switch
+// PE1 : Interface switch - LEFT
+// PE2 : Interface switch - MIDDLE
+// PE3 : Interface switch - RIGHT
+// PE4 : Mode change switch (Toggle)
+PORTE=0x00;
+DDRE=0xEF;
+// PF0~3 : Pressure Sensor
+// PF4~7 : Flex Sensor
+PORTF=0x00;
+DDRF=0x00;
+PORTG=0x00;
+DDRG=0x00;
+
+// Compare match interrupt  : Valve on
+// Overflow interrupt       : Valve off
+// Timer 1 B : PUMP pwm control by using OCR1B
+// Timer 1   : Inlet Valve control
+// Timer 3   : Outlet Valve on
+
+// Timer/Counter 1 initialization
+TCCR1A=0x22;//Timer 1 과 관련된 입출력 핀 중 OC1B만 PWM출력(TIM1_COMPAt시에 Low) 나머지는 GPIO로 사용
+TCCR1B=0x18;//Timer 1 : Fast PWM mode, 분주비=1, TOP=ICR1
+TCNT1H=0x00;
+TCNT1L=0x00;
+ICR1H=0x13;
+ICR1L=0x87;
+OCR1AH=0x00;
+OCR1AL=0x00;
+OCR1BH=0x00;
+OCR1BL=0x00;
+OCR1CH=0x00;
+OCR1CL=0x00;
+// Timer/Counter 3 initialization
+TCCR3A=0x02;//Timer 3 과 관련된 입출력 핀은 GPIO로 사용
+TCCR3B=0x18;//Timer 3 : Fast PWM mode, 분주비=1, TOP=ICR3
+TCNT3H=0x00;
+TCNT3L=0x00;
+ICR3H=0x00;
+ICR3L=0x00;
+OCR3AH=0x00;
+OCR3AL=0x00;
+OCR3BH=0x00;
+OCR3BL=0x00;
+OCR3CH=0x00;
+OCR3CL=0x00;
+//Timer/counter interrupt
+TIMSK = 0x00;
+ETIMSK = 0x00;
+
+//ADC setting
+ADMUX=0x21;
+ADCSRA=0xCF;  //ADC enable, ADC start, ADC interrupt on, 분주비128(62.5kHz)
+SFIOR=0x01;
+
+lcd_init(8);
+// Global enable interrupts
+#asm("sei")
+//SREG = 0x80;
+while (1)
+      {
+        if(Left_switch_on) menu++;
+        if(Right_switch_on) menu--;
+        if(menu > menu_Max)    menu = 0;
+        if(menu == 0)
+            if(Right_switch_on) menu = menu_Max;
+
+        switch(menu)
+        {
+            // Sensor TEST
+            case 0:
+                    lcd_clear();
+                    lcd_gotoxy(0, 0);
+                    lcd_putsf("1.Pressure TEST");
+                    if(Middle_switch_on) pressure_test();
+                    delay_ms(300);
+                    break;
+
+            case 1:
+                    lcd_clear();
+                    lcd_gotoxy(0, 0);
+                    lcd_putsf("2.Pressure Tunning");
+                    if(Middle_switch_on)    pressure_tuning();
+                    delay_ms(300);
+                    break;
+
+            case 2:
+                    lcd_clear();
+                    lcd_gotoxy(0, 0);
+                    lcd_putsf("3.Flex TEST");
+                    if(Middle_switch_on)    flex_test();
+                    delay_ms(300);
+                    break;
+            case 3:
+                    lcd_clear();
+                    lcd_gotoxy(0, 0);
+                    lcd_putsf("4.Flex Tunning");
+                    if(Middle_switch_on)    flex_tuning();
+                    delay_ms(300);
+                    break;
+
+            case 4:
+                    lcd_clear();
+                    lcd_gotoxy(0, 0);
+                    lcd_putsf("5.PWM TEST");
+                    if(Middle_switch_on)    check_pwm();
+                    delay_ms(300);
+                    break;
+
+            case 5:
+                    lcd_clear();
+                    lcd_gotoxy(0, 0);
+                    lcd_putsf("6.PUMP TEST");
+                    if(Middle_switch_on)    PUMP_test();
+                    delay_ms(300);
+                    break;
+
+            case 6:
+                    lcd_clear();
+                    lcd_gotoxy(0, 0);
+                    lcd_putsf("7.Order TEST");
+                    if(Middle_switch_on)    test_order();
+                    delay_ms(300);
+                    break;
+
+             default :
+                    lcd_clear();
+                    lcd_gotoxy(0, 0);
+                    lcd_putsf("**BREAK!**");
+                    delay_ms(300);
+                    break;
+
+         }
+      }
+
+}

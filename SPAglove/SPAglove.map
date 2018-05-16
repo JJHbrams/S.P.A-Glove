@@ -1,0 +1,30 @@
+RAM Allocation
+Variable                                                          Address   Size
+--------------------------------------------------------------------------------
+sam_num                                                           0x0500       1
+i                                                                 0x0501       2
+lcd_data                                                          0x0503      40
+mux                                                               0x052B       1
+d_flag                                                            0x052C       1
+pressure_data                                                     0x052D     200
+pressure_sum                                                      0x05F5       8
+pressure_mean                                                     0x05FD       4
+pressure_max                                                      0x0601       4
+pressure_min                                                      0x0605       4
+flex_data                                                         0x0609     200
+flex_sum                                                          0x06D1       8
+flex_mean                                                         0x06D9       4
+flex_max                                                          0x06DD       4
+flex_min                                                          0x06E1       4
+_base_y                                                           0x06E5       4
+_lcd_x                                                            0x06E9       1
+_lcd_y                                                            0x06EA       1
+_lcd_maxx                                                         0x06EB       1
+
+EEPROM Allocation
+Variable                                                          Address   Size
+--------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                          Register  Size
+--------------------------------------------------------------------------------
