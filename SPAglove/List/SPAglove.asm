@@ -1114,10 +1114,10 @@ _0x5:
 	.DB  0x17,0xB7,0xD1,0x38
 _0x6:
 	.DB  0xA
-_0x7D:
+_0x99:
 	.DB  0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0
 	.DB  0x0,0x0,0x80,0x3F,0x0,0x0,0x80,0x3F
-_0x9F:
+_0xBB:
 	.DB  0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0
 	.DB  0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0
 _0x0:
@@ -1127,7 +1127,10 @@ _0x0:
 	.DB  0x25,0x64,0x20,0x25,0x0,0x45,0x0,0x46
 	.DB  0x0,0x2D,0x0,0x54,0x0,0x49,0x0,0x4D
 	.DB  0x0,0x52,0x0,0x56,0x61,0x6C,0x76,0x65
-	.DB  0x21,0x0,0x31,0x2E,0x50,0x72,0x65,0x73
+	.DB  0x21,0x0,0x44,0x75,0x74,0x79,0x20,0x3A
+	.DB  0x20,0x0,0x25,0x32,0x64,0x20,0x25,0x0
+	.DB  0x46,0x4C,0x45,0x58,0x0,0x50,0x52,0x45
+	.DB  0x53,0x0,0x31,0x2E,0x50,0x72,0x65,0x73
 	.DB  0x73,0x75,0x72,0x65,0x20,0x54,0x45,0x53
 	.DB  0x54,0x0,0x32,0x2E,0x50,0x72,0x65,0x73
 	.DB  0x73,0x75,0x72,0x65,0x20,0x54,0x75,0x6E
@@ -1141,8 +1144,11 @@ _0x0:
 	.DB  0x2E,0x4F,0x72,0x64,0x65,0x72,0x20,0x54
 	.DB  0x45,0x53,0x54,0x0,0x38,0x2E,0x56,0x61
 	.DB  0x6C,0x76,0x65,0x20,0x4F,0x72,0x64,0x65
-	.DB  0x72,0x0,0x2A,0x2A,0x42,0x52,0x45,0x41
-	.DB  0x4B,0x21,0x2A,0x2A,0x0
+	.DB  0x72,0x0,0x39,0x2E,0x54,0x68,0x72,0x65
+	.DB  0x73,0x68,0x6F,0x6C,0x64,0x3F,0x0,0x31
+	.DB  0x30,0x2E,0x50,0x55,0x4D,0x50,0x20,0x56
+	.DB  0x41,0x4C,0x56,0x45,0x0,0x2A,0x2A,0x42
+	.DB  0x52,0x45,0x41,0x4B,0x21,0x2A,0x2A,0x0
 _0x2020003:
 	.DB  0x80,0xC0
 
@@ -1258,7 +1264,7 @@ __GLOBAL_INI_END:
 ;http://www.hpinfotech.com
 ;
 ;Project : 2018 占쏙옙占쏙옙占쏙옙품 12占쏙옙 - S.P.A glove
-;Version : 1.1.2
+;Version : 2.1.0
 ;Date    : 2018-05-03
 ;Author  : JJH
 ;Company : Chungnam National University
@@ -1386,13 +1392,13 @@ _timer1_compa_isr:
 	CALL SUBOPT_0x0
 ; 0000 0076   PORTC |= 0x01<<Global_Sequence;//INLET Valve on
 	LDI  R26,LOW(1)
-	RJMP _0xC7
+	RJMP _0xE7
 ; 0000 0077 }
 ;// Timer1 overflow A interrupt service routine
 ;interrupt [TIM1_OVF] void timer1_ovf_isr(void)
 ; 0000 007A {
 _timer1_ovf_isr:
-	RJMP _0xC6
+	RJMP _0xE6
 ; 0000 007B   PORTC=0x00;//INLET Valve off
 ; 0000 007C }
 ;// Timer 3 Controls OUTLET!!
@@ -1403,7 +1409,7 @@ _timer3_compa_isr:
 	CALL SUBOPT_0x0
 ; 0000 0081   PORTC |= 0x10<<Global_Sequence;//OUTLET Valve on
 	LDI  R26,LOW(16)
-_0xC7:
+_0xE7:
 	CALL __LSLB12
 	OR   R30,R1
 	OUT  0x15,R30
@@ -1419,7 +1425,7 @@ _0xC7:
 ;interrupt [TIM3_OVF] void timer3_ovf_isr(void)
 ; 0000 0085 {
 _timer3_ovf_isr:
-_0xC6:
+_0xE6:
 	ST   -Y,R30
 ; 0000 0086   PORTC=0x00;//OUTLET Valve off
 	LDI  R30,LOW(0)
@@ -1453,7 +1459,7 @@ _adc_isr:
 	CALL __MULW12U
 	SUBI R30,LOW(-_flex_data)
 	SBCI R31,HIGH(-_flex_data)
-	RJMP _0xC3
+	RJMP _0xE3
 ; 0000 008E     else                pressure_data[mux][sam_num] = ADCH;     // 0, 1, 2, 3
 _0x7:
 	LDS  R30,_mux
@@ -1462,7 +1468,7 @@ _0x7:
 	MOVW R30,R0
 	SUBI R30,LOW(-_pressure_data)
 	SBCI R31,HIGH(-_pressure_data)
-_0xC3:
+_0xE3:
 	MOVW R26,R30
 	LDS  R30,_sam_num
 	LDI  R31,0
@@ -2006,11 +2012,9 @@ _check_pwm:
 	CALL SUBOPT_0x18
 ; 0000 013F 
 ; 0000 0140     INITIATE; //Timer interrupts on
-	LDI  R30,LOW(20)
-	OUT  0x37,R30
-	STS  125,R30
-; 0000 0141     ICR1H=0x13;
 	CALL SUBOPT_0x19
+; 0000 0141     ICR1H=0x13;
+	CALL SUBOPT_0x1A
 ; 0000 0142     ICR1L=0x87;
 ; 0000 0143     while(Middle_switch_off)
 _0x38:
@@ -2020,154 +2024,156 @@ _0x38:
 ; 0000 0145         if(Left_switch_on)  temp++;
 	SBIC 0x1,3
 	RJMP _0x3B
-	CALL __GETD1S0
+	CALL SUBOPT_0x1B
 	__SUBD1N -1
-	CALL SUBOPT_0x1A
+	CALL SUBOPT_0x1C
 ; 0000 0146         if(Right_switch_on)  temp--;
 _0x3B:
 	SBIC 0x1,1
 	RJMP _0x3C
-	CALL __GETD1S0
+	CALL SUBOPT_0x1B
 	SBIW R30,1
 	SBCI R22,0
 	SBCI R23,0
-	CALL SUBOPT_0x1A
+	CALL SUBOPT_0x1C
 ; 0000 0147         if(temp<1) temp=1;
 _0x3C:
 	CALL __GETD2S0
 	__CPD2N 0x1
 	BRGE _0x3D
 	__GETD1N 0x1
-	CALL SUBOPT_0x1A
+	CALL SUBOPT_0x1C
 ; 0000 0148         if(temp>99)  temp=99;
 _0x3D:
 	CALL __GETD2S0
 	__CPD2N 0x64
 	BRLT _0x3E
 	__GETD1N 0x63
-	CALL SUBOPT_0x1A
-; 0000 0149         // TEST by LED berfore Valve delivered...
-; 0000 014A         OCR1A = temp*50;
-_0x3E:
-	LD   R30,Y
-	LDD  R31,Y+1
-	LDI  R26,LOW(50)
-	LDI  R27,HIGH(50)
-	CALL __MULW12
-	OUT  0x2A+1,R31
-	OUT  0x2A,R30
-; 0000 014B 
-; 0000 014C         lcd_clear();
-	CALL SUBOPT_0xA
-; 0000 014D         lcd_gotoxy(0, 0);
-; 0000 014E         lcd_putsf("Duty");
-	CALL SUBOPT_0x1B
-; 0000 014F         lcd_gotoxy(0, 1);
-; 0000 0150         sprintf(lcd_data, "%d %", temp);
-	__GETD1S 4
 	CALL SUBOPT_0x1C
-; 0000 0151         lcd_puts(lcd_data);
-; 0000 0152 
-; 0000 0153         delay_ms(100);
-; 0000 0154     }
+; 0000 0149         // TEST by LED berfore Valve delivered...
+; 0000 014A         OCR1AH = temp*50>>8;
+_0x3E:
+	CALL SUBOPT_0x1B
+	__GETD2N 0x32
+	CALL __MULD12
+	MOVW R26,R30
+	MOVW R24,R22
+	LDI  R30,LOW(8)
+	CALL __ASRD12
+	OUT  0x2B,R30
+; 0000 014B         OCR1AL = temp*50;
+	LD   R30,Y
+	LDI  R26,LOW(50)
+	MULS R30,R26
+	MOVW R30,R0
+	OUT  0x2A,R30
+; 0000 014C 
+; 0000 014D         lcd_clear();
+	CALL SUBOPT_0xA
+; 0000 014E         lcd_gotoxy(0, 0);
+; 0000 014F         lcd_putsf("Duty");
+	CALL SUBOPT_0x1D
+; 0000 0150         lcd_gotoxy(0, 1);
+; 0000 0151         sprintf(lcd_data, "%d %", temp);
+	__GETD1S 4
+	CALL SUBOPT_0x1E
+; 0000 0152         lcd_puts(lcd_data);
+; 0000 0153 
+; 0000 0154         delay_ms(100);
+; 0000 0155     }
 	RJMP _0x38
 _0x3A:
-; 0000 0155     TERMINATE; //Timer interrupts off
-	CALL SUBOPT_0x1D
-; 0000 0156     PORTC=0x00;
+; 0000 0156     TERMINATE; //Timer interrupts off
+	CALL SUBOPT_0x1F
+; 0000 0157     PORTC=0x00;
 	OUT  0x15,R30
-; 0000 0157     OCR1AH = 0;
-	LDI  R30,LOW(0)
-	OUT  0x2B,R30
-; 0000 0158     OCR1AL = 0;//0% duty
-	OUT  0x2A,R30
-; 0000 0159     ICR1H=0x13;
-	CALL SUBOPT_0x19
-; 0000 015A     ICR1L=0x87;
-; 0000 015B }
+; 0000 0158     OCR1AH = 0;
+	CALL SUBOPT_0x20
+; 0000 0159     OCR1AL = 0;//0% duty
+; 0000 015A     ICR1H=0x13;
+	CALL SUBOPT_0x1A
+; 0000 015B     ICR1L=0x87;
+; 0000 015C }
 	RJMP _0x2080007
 ;
 ;// ******************************** About PWM control *******************************************************
 ;void PUMP_test()
-; 0000 015F {
+; 0000 0160 {
 _PUMP_test:
-; 0000 0160     int temp = 50;//50% duty
-; 0000 0161     delay_ms(50);
+; 0000 0161     int temp = 50;//50% duty
+; 0000 0162     delay_ms(50);
 	ST   -Y,R17
 	ST   -Y,R16
 ;	temp -> R16,R17
 	__GETWRN 16,17,50
 	CALL SUBOPT_0x18
-; 0000 0162 
-; 0000 0163     while(Middle_switch_off)
+; 0000 0163 
+; 0000 0164     while(Middle_switch_off)
 _0x3F:
 	SBIS 0x1,2
 	RJMP _0x41
-; 0000 0164     {
-; 0000 0165         if(Left_switch_on)  temp++;
+; 0000 0165     {
+; 0000 0166         if(Left_switch_on)  temp++;
 	SBIC 0x1,3
 	RJMP _0x42
 	__ADDWRN 16,17,1
-; 0000 0166         if(Right_switch_on)  temp--;
+; 0000 0167         if(Right_switch_on)  temp--;
 _0x42:
 	SBIC 0x1,1
 	RJMP _0x43
 	__SUBWRN 16,17,1
-; 0000 0167         if(temp<1) temp=1;
+; 0000 0168         if(temp<1) temp=1;
 _0x43:
 	__CPWRN 16,17,1
 	BRGE _0x44
 	__GETWRN 16,17,1
-; 0000 0168         if(temp>99)  temp=99;
+; 0000 0169         if(temp>99)  temp=99;
 _0x44:
 	__CPWRN 16,17,100
 	BRLT _0x45
 	__GETWRN 16,17,99
-; 0000 0169         // TEST by LED berfore Valve delivered...
-; 0000 016A         OCR1BH = temp*50 >>8;
+; 0000 016A         // TEST by LED berfore Valve delivered...
+; 0000 016B         OCR1BH = temp*50 >>8;
 _0x45:
 	MOVW R30,R16
 	LDI  R26,LOW(50)
 	LDI  R27,HIGH(50)
 	CALL __MULW12
-	CALL __ASRW8
-	OUT  0x29,R30
-; 0000 016B         OCR1BL = temp*50;
-	LDI  R26,LOW(50)
-	MULS R16,R26
-	MOVW R30,R0
-	OUT  0x28,R30
-; 0000 016C 
-; 0000 016D         lcd_clear();
+	CALL SUBOPT_0x21
+; 0000 016C         OCR1BL = temp*50;
+; 0000 016D 
+; 0000 016E         lcd_clear();
 	CALL SUBOPT_0xA
-; 0000 016E         lcd_gotoxy(0, 0);
-; 0000 016F         lcd_putsf("Duty");
-	CALL SUBOPT_0x1B
-; 0000 0170         lcd_gotoxy(0, 1);
-; 0000 0171         sprintf(lcd_data, "%d %", temp);
+; 0000 016F         lcd_gotoxy(0, 0);
+; 0000 0170         lcd_putsf("Duty");
+	CALL SUBOPT_0x1D
+; 0000 0171         lcd_gotoxy(0, 1);
+; 0000 0172         sprintf(lcd_data, "%d %", temp);
 	MOVW R30,R16
 	CALL __CWD1
-	CALL SUBOPT_0x1C
-; 0000 0172         lcd_puts(lcd_data);
-; 0000 0173 
-; 0000 0174         delay_ms(100);
-; 0000 0175     }
+	CALL SUBOPT_0x1E
+; 0000 0173         lcd_puts(lcd_data);
+; 0000 0174 
+; 0000 0175         delay_ms(100);
+; 0000 0176     }
 	RJMP _0x3F
 _0x41:
-; 0000 0176     OCR1BH=0x00;
-	CALL SUBOPT_0x1E
-; 0000 0177     OCR1BL=0x00; //0% duty
-; 0000 0178 }
+; 0000 0177     OCR1BH=0x00;
+	CALL SUBOPT_0x22
+; 0000 0178     OCR1BL=0x00; //0% duty
+; 0000 0179     PORTB=0x00;
+	OUT  0x18,R30
+; 0000 017A }
 	RJMP _0x2080005
 ;
 ;// ******************************** About Order *******************************************************
 ;void order(unsigned char * sequence)
-; 0000 017C {
+; 0000 017E {
 _order:
-; 0000 017D     unsigned char seq=*sequence;
-; 0000 017E     unsigned char Order=0x00;
-; 0000 017F 
-; 0000 0180     if(Up_thumb)    Order|=0x01;
+; 0000 017F     unsigned char seq=*sequence;
+; 0000 0180     unsigned char Order=0x00;
+; 0000 0181 
+; 0000 0182     if(Up_thumb)    Order|=0x01;
 	ST   -Y,R17
 	ST   -Y,R16
 ;	*sequence -> Y+2
@@ -2180,28 +2186,28 @@ _order:
 	LDI  R16,0
 	SBIS 0x1,5
 	ORI  R16,LOW(1)
-; 0000 0181     if(Up_index)    Order|=0x02;
+; 0000 0183     if(Up_index)    Order|=0x02;
 	SBIS 0x19,2
 	ORI  R16,LOW(2)
-; 0000 0182     if(Up_middle)   Order|=0x04;
+; 0000 0184     if(Up_middle)   Order|=0x04;
 	SBIS 0x19,4
 	ORI  R16,LOW(4)
-; 0000 0183     if(Up_rest)     Order|=0x08;
+; 0000 0185     if(Up_rest)     Order|=0x08;
 	SBIS 0x19,6
 	ORI  R16,LOW(8)
-; 0000 0184     if(Down_thumb)  Order|=0x10;
+; 0000 0186     if(Down_thumb)  Order|=0x10;
 	SBIS 0x19,1
 	ORI  R16,LOW(16)
-; 0000 0185     if(Down_index)  Order|=0x20;
+; 0000 0187     if(Down_index)  Order|=0x20;
 	SBIS 0x19,3
 	ORI  R16,LOW(32)
-; 0000 0186     if(Down_middle) Order|=0x40;
+; 0000 0188     if(Down_middle) Order|=0x40;
 	SBIS 0x19,5
 	ORI  R16,LOW(64)
-; 0000 0187     if(Down_rest)   Order|=0x80;
+; 0000 0189     if(Down_rest)   Order|=0x80;
 	SBIS 0x19,7
 	ORI  R16,LOW(128)
-; 0000 0188     if(NO_SIGNAL_tu&&NO_SIGNAL_td) Order&=0xEE;
+; 0000 018A     if(NO_SIGNAL_tu&&NO_SIGNAL_td) Order&=0xEE;
 	SBIS 0x1,5
 	RJMP _0x4F
 	SBIC 0x19,1
@@ -2210,7 +2216,7 @@ _0x4F:
 	RJMP _0x4E
 _0x50:
 	ANDI R16,LOW(238)
-; 0000 0189     if(NO_SIGNAL_iu&&NO_SIGNAL_id) Order&=0xDD;
+; 0000 018B     if(NO_SIGNAL_iu&&NO_SIGNAL_id) Order&=0xDD;
 _0x4E:
 	SBIS 0x19,2
 	RJMP _0x52
@@ -2220,7 +2226,7 @@ _0x52:
 	RJMP _0x51
 _0x53:
 	ANDI R16,LOW(221)
-; 0000 018A     if(NO_SIGNAL_mu&&NO_SIGNAL_md) Order&=0xBB;
+; 0000 018C     if(NO_SIGNAL_mu&&NO_SIGNAL_md) Order&=0xBB;
 _0x51:
 	SBIS 0x19,4
 	RJMP _0x55
@@ -2230,7 +2236,7 @@ _0x55:
 	RJMP _0x54
 _0x56:
 	ANDI R16,LOW(187)
-; 0000 018B     if(NO_SIGNAL_ru&&NO_SIGNAL_rd) Order&=0x77;
+; 0000 018D     if(NO_SIGNAL_ru&&NO_SIGNAL_rd) Order&=0x77;
 _0x54:
 	SBIS 0x19,6
 	RJMP _0x58
@@ -2240,77 +2246,77 @@ _0x58:
 	RJMP _0x57
 _0x59:
 	ANDI R16,LOW(119)
-; 0000 018C     /*
-; 0000 018D     lcd_clear();
-; 0000 018E     lcd_gotoxy(0, 0);
-; 0000 018F     sprintf(lcd_data, "%2x", Order);
-; 0000 0190     lcd_puts(lcd_data);
-; 0000 0191     */
-; 0000 0192 
-; 0000 0193     if(Order&(0x01<<seq))
+; 0000 018E     /*
+; 0000 018F     lcd_clear();
+; 0000 0190     lcd_gotoxy(0, 0);
+; 0000 0191     sprintf(lcd_data, "%2x", Order);
+; 0000 0192     lcd_puts(lcd_data);
+; 0000 0193     */
+; 0000 0194 
+; 0000 0195     if(Order&(0x01<<seq))
 _0x57:
-	CALL SUBOPT_0x1F
+	CALL SUBOPT_0x23
 	BREQ _0x5A
-; 0000 0194     {
-; 0000 0195         E_flag[seq]=1;
+; 0000 0196     {
+; 0000 0197         E_flag[seq]=1;
 	CALL SUBOPT_0x11
 	SUBI R30,LOW(-_E_flag)
 	SBCI R31,HIGH(-_E_flag)
 	LDI  R26,LOW(1)
 	STD  Z+0,R26
-; 0000 0196         F_flag[seq]=0;
+; 0000 0198         F_flag[seq]=0;
 	CALL SUBOPT_0x11
-	CALL SUBOPT_0x20
-; 0000 0197     }
-; 0000 0198     if(Order&(0x10<<seq))
+	CALL SUBOPT_0x24
+; 0000 0199     }
+; 0000 019A     if(Order&(0x10<<seq))
 _0x5A:
-	CALL SUBOPT_0x21
+	CALL SUBOPT_0x25
 	BREQ _0x5B
-; 0000 0199     {
-; 0000 019A         E_flag[seq]=0;
+; 0000 019B     {
+; 0000 019C         E_flag[seq]=0;
 	CALL SUBOPT_0x11
-	CALL SUBOPT_0x22
-; 0000 019B         F_flag[seq]=1;
+	CALL SUBOPT_0x26
+; 0000 019D         F_flag[seq]=1;
 	SUBI R30,LOW(-_F_flag)
 	SBCI R31,HIGH(-_F_flag)
 	LDI  R26,LOW(1)
 	STD  Z+0,R26
-; 0000 019C     }
-; 0000 019D     if(!(Order&(0x01<<seq))&&!(Order&(0x10<<seq)))
+; 0000 019E     }
+; 0000 019F     if(!(Order&(0x01<<seq))&&!(Order&(0x10<<seq)))
 _0x5B:
-	CALL SUBOPT_0x1F
+	CALL SUBOPT_0x23
 	BRNE _0x5D
-	CALL SUBOPT_0x21
+	CALL SUBOPT_0x25
 	BREQ _0x5E
 _0x5D:
 	RJMP _0x5C
 _0x5E:
-; 0000 019E     {
-; 0000 019F         E_flag[seq]=0;
+; 0000 01A0     {
+; 0000 01A1         E_flag[seq]=0;
 	CALL SUBOPT_0x11
-	CALL SUBOPT_0x22
-; 0000 01A0         F_flag[seq]=0;
-	CALL SUBOPT_0x20
-; 0000 01A1     }
-; 0000 01A2 
-; 0000 01A3     // sequence 0 : Thumb   PC0, PC4 on, PORTC = 0x11
-; 0000 01A4     // sequence 1 : Index   PC1, PC5 on, PORTC = 0x22
-; 0000 01A5     // sequence 2 : Middle  PC2, PC6 on, PORTC = 0x44
-; 0000 01A6     // sequence 3 : Rest    PC3, PC7 on, PORTC = 0x88
-; 0000 01A7     //PORTC = 0x11<<sequence;
-; 0000 01A8     seq++;
+	CALL SUBOPT_0x26
+; 0000 01A2         F_flag[seq]=0;
+	CALL SUBOPT_0x24
+; 0000 01A3     }
+; 0000 01A4 
+; 0000 01A5     // sequence 0 : Thumb   PC0, PC4 on, PORTC = 0x11
+; 0000 01A6     // sequence 1 : Index   PC1, PC5 on, PORTC = 0x22
+; 0000 01A7     // sequence 2 : Middle  PC2, PC6 on, PORTC = 0x44
+; 0000 01A8     // sequence 3 : Rest    PC3, PC7 on, PORTC = 0x88
+; 0000 01A9     //PORTC = 0x11<<sequence;
+; 0000 01AA     seq++;
 _0x5C:
 	SUBI R17,-1
-; 0000 01A9     if(seq>3) seq=0;
+; 0000 01AB     if(seq>3) seq=0;
 	CPI  R17,4
 	BRLO _0x5F
 	LDI  R17,LOW(0)
-; 0000 01AA     *sequence=seq;
+; 0000 01AC     *sequence=seq;
 _0x5F:
 	LDD  R26,Y+2
 	LDD  R27,Y+2+1
 	ST   X,R17
-; 0000 01AB }
+; 0000 01AD }
 	LDD  R17,Y+1
 	LDD  R16,Y+0
 _0x2080007:
@@ -2318,62 +2324,62 @@ _0x2080007:
 	RET
 ;
 ;void disp(unsigned char x, unsigned char seq)
-; 0000 01AE {
+; 0000 01B0 {
 _disp:
-; 0000 01AF     lcd_gotoxy(x, 1);
+; 0000 01B1     lcd_gotoxy(x, 1);
 ;	x -> Y+1
 ;	seq -> Y+0
 	LDD  R30,Y+1
-	CALL SUBOPT_0x23
-; 0000 01B0     if(E_flag[seq])                     lcd_putsf("E");
-	CALL SUBOPT_0x24
+	CALL SUBOPT_0x27
+; 0000 01B2     if(E_flag[seq])                     lcd_putsf("E");
+	CALL SUBOPT_0x28
 	SUBI R30,LOW(-_E_flag)
 	SBCI R31,HIGH(-_E_flag)
 	LD   R30,Z
 	CPI  R30,0
 	BREQ _0x60
 	__POINTW1FN _0x0,29
-	CALL SUBOPT_0x25
-; 0000 01B1     if(F_flag[seq])                     lcd_putsf("F");
+	CALL SUBOPT_0x29
+; 0000 01B3     if(F_flag[seq])                     lcd_putsf("F");
 _0x60:
-	CALL SUBOPT_0x24
+	CALL SUBOPT_0x28
 	SUBI R30,LOW(-_F_flag)
 	SBCI R31,HIGH(-_F_flag)
 	LD   R30,Z
 	CPI  R30,0
 	BREQ _0x61
 	__POINTW1FN _0x0,31
-	CALL SUBOPT_0x25
-; 0000 01B2     if((E_flag[seq]==0)&&(F_flag[seq]==0))  lcd_putsf("-");
+	CALL SUBOPT_0x29
+; 0000 01B4     if((E_flag[seq]==0)&&(F_flag[seq]==0))  lcd_putsf("-");
 _0x61:
-	CALL SUBOPT_0x24
-	CALL SUBOPT_0x26
+	CALL SUBOPT_0x28
+	CALL SUBOPT_0x2A
 	BRNE _0x63
-	CALL SUBOPT_0x27
+	CALL SUBOPT_0x2B
 	BREQ _0x64
 _0x63:
 	RJMP _0x62
 _0x64:
 	__POINTW1FN _0x0,33
-	CALL SUBOPT_0x25
-; 0000 01B3 }
+	CALL SUBOPT_0x29
+; 0000 01B5 }
 _0x62:
 	JMP  _0x2080003
 ;
 ;void test_order()
-; 0000 01B6 {
+; 0000 01B8 {
 _test_order:
-; 0000 01B7     unsigned char sequence=0;
-; 0000 01B8 
-; 0000 01B9     delay_ms(50);
+; 0000 01B9     unsigned char sequence=0;
+; 0000 01BA 
+; 0000 01BB     delay_ms(50);
 	CALL SUBOPT_0x9
 ;	sequence -> R17
-; 0000 01BA     while(Middle_switch_off)
+; 0000 01BC     while(Middle_switch_off)
 _0x65:
 	SBIS 0x1,2
 	RJMP _0x67
-; 0000 01BB     {
-; 0000 01BC         order(&sequence);
+; 0000 01BD     {
+; 0000 01BE         order(&sequence);
 	IN   R30,SPL
 	IN   R31,SPH
 	ST   -Y,R31
@@ -2381,76 +2387,76 @@ _0x65:
 	PUSH R17
 	RCALL _order
 	POP  R17
-; 0000 01BD 
-; 0000 01BE         lcd_clear();
-	CALL SUBOPT_0xA
 ; 0000 01BF 
-; 0000 01C0         lcd_gotoxy(0, 0);lcd_putsf("T");
+; 0000 01C0         lcd_clear();
+	CALL SUBOPT_0xA
+; 0000 01C1 
+; 0000 01C2         lcd_gotoxy(0, 0);lcd_putsf("T");
 	__POINTW1FN _0x0,35
-	CALL SUBOPT_0x25
-; 0000 01C1         lcd_gotoxy(2, 0);lcd_putsf("I");
+	CALL SUBOPT_0x29
+; 0000 01C3         lcd_gotoxy(2, 0);lcd_putsf("I");
 	LDI  R30,LOW(2)
-	CALL SUBOPT_0x28
+	CALL SUBOPT_0x2C
 	__POINTW1FN _0x0,37
-	CALL SUBOPT_0x25
-; 0000 01C2         lcd_gotoxy(4, 0);lcd_putsf("M");
+	CALL SUBOPT_0x29
+; 0000 01C4         lcd_gotoxy(4, 0);lcd_putsf("M");
 	LDI  R30,LOW(4)
-	CALL SUBOPT_0x28
+	CALL SUBOPT_0x2C
 	__POINTW1FN _0x0,39
-	CALL SUBOPT_0x25
-; 0000 01C3         lcd_gotoxy(6, 0);lcd_putsf("R");
+	CALL SUBOPT_0x29
+; 0000 01C5         lcd_gotoxy(6, 0);lcd_putsf("R");
 	LDI  R30,LOW(6)
-	CALL SUBOPT_0x28
+	CALL SUBOPT_0x2C
 	__POINTW1FN _0x0,41
-	CALL SUBOPT_0x25
-; 0000 01C4 
-; 0000 01C5         disp(0,0);
+	CALL SUBOPT_0x29
+; 0000 01C6 
+; 0000 01C7         disp(0,0);
 	LDI  R30,LOW(0)
 	ST   -Y,R30
 	ST   -Y,R30
 	RCALL _disp
-; 0000 01C6         disp(2,1);
+; 0000 01C8         disp(2,1);
 	LDI  R30,LOW(2)
 	ST   -Y,R30
 	LDI  R30,LOW(1)
 	ST   -Y,R30
 	RCALL _disp
-; 0000 01C7         disp(4,2);
+; 0000 01C9         disp(4,2);
 	LDI  R30,LOW(4)
 	ST   -Y,R30
 	LDI  R30,LOW(2)
 	ST   -Y,R30
 	RCALL _disp
-; 0000 01C8         disp(6,3);
+; 0000 01CA         disp(6,3);
 	LDI  R30,LOW(6)
 	ST   -Y,R30
 	LDI  R30,LOW(3)
 	ST   -Y,R30
 	RCALL _disp
-; 0000 01C9 
-; 0000 01CA 
-; 0000 01CB         /*
-; 0000 01CC         lcd_gotoxy(0, 1);
-; 0000 01CD         sprintf(lcd_data, "%d", sequence);
-; 0000 01CE         lcd_puts(lcd_data);
-; 0000 01CF         */
-; 0000 01D0         delay_ms(100);//Sequence term
+; 0000 01CB 
+; 0000 01CC 
+; 0000 01CD         /*
+; 0000 01CE         lcd_gotoxy(0, 1);
+; 0000 01CF         sprintf(lcd_data, "%d", sequence);
+; 0000 01D0         lcd_puts(lcd_data);
+; 0000 01D1         */
+; 0000 01D2         delay_ms(100);//Sequence term
 	CALL SUBOPT_0x14
-; 0000 01D1     }
+; 0000 01D3     }
 	RJMP _0x65
 _0x67:
-; 0000 01D2 }
+; 0000 01D4 }
 _0x2080006:
 	LD   R17,Y+
 	RET
 ;
 ;void valve_order()
-; 0000 01D5 {
+; 0000 01D7 {
 _valve_order:
-; 0000 01D6     unsigned char seq=0;
-; 0000 01D7     unsigned char temp=0;
-; 0000 01D8 
-; 0000 01D9     delay_ms(50);
+; 0000 01D8     unsigned char seq=0;
+; 0000 01D9     unsigned char temp=0;
+; 0000 01DA 
+; 0000 01DB     delay_ms(50);
 	ST   -Y,R17
 	ST   -Y,R16
 ;	seq -> R17
@@ -2458,16 +2464,14 @@ _valve_order:
 	LDI  R17,0
 	LDI  R16,0
 	CALL SUBOPT_0x18
-; 0000 01DA     INITIATE;
-	LDI  R30,LOW(20)
-	OUT  0x37,R30
-	STS  125,R30
-; 0000 01DB     while(Middle_switch_off)
+; 0000 01DC     INITIATE;
+	CALL SUBOPT_0x19
+; 0000 01DD     while(Middle_switch_off)
 _0x68:
 	SBIS 0x1,2
 	RJMP _0x6A
-; 0000 01DC     {
-; 0000 01DD         order(&seq);
+; 0000 01DE     {
+; 0000 01DF         order(&seq);
 	IN   R30,SPL
 	IN   R31,SPH
 	ST   -Y,R31
@@ -2475,35 +2479,35 @@ _0x68:
 	PUSH R17
 	RCALL _order
 	POP  R17
-; 0000 01DE         //Global_Sequence=seq;
-; 0000 01DF 
-; 0000 01E0         lcd_clear();
+; 0000 01E0         //Global_Sequence=seq;
+; 0000 01E1 
+; 0000 01E2         lcd_clear();
 	CALL SUBOPT_0xA
-; 0000 01E1         lcd_gotoxy(0, 0);lcd_putsf("Valve!");
+; 0000 01E3         lcd_gotoxy(0, 0);lcd_putsf("Valve!");
 	__POINTW1FN _0x0,43
-	CALL SUBOPT_0x25
-; 0000 01E2 
-; 0000 01E3         if(Left_switch_on)  Global_Sequence++;
+	CALL SUBOPT_0x29
+; 0000 01E4 
+; 0000 01E5         if(Left_switch_on)  Global_Sequence++;
 	SBIC 0x1,3
 	RJMP _0x6B
 	LDS  R30,_Global_Sequence
 	SUBI R30,-LOW(1)
 	STS  _Global_Sequence,R30
-; 0000 01E4         if(Right_switch_on)  Global_Sequence--;
+; 0000 01E6         if(Right_switch_on)  Global_Sequence--;
 _0x6B:
 	SBIC 0x1,1
 	RJMP _0x6C
 	LDS  R30,_Global_Sequence
 	SUBI R30,LOW(1)
 	STS  _Global_Sequence,R30
-; 0000 01E5         if(Global_Sequence>3)   Global_Sequence=0;
+; 0000 01E7         if(Global_Sequence>3)   Global_Sequence=0;
 _0x6C:
 	LDS  R26,_Global_Sequence
 	CPI  R26,LOW(0x4)
 	BRLO _0x6D
 	LDI  R30,LOW(0)
 	STS  _Global_Sequence,R30
-; 0000 01E6         if(Global_Sequence==0 && Right_switch_on)   Global_Sequence=3;
+; 0000 01E8         if(Global_Sequence==0 && Right_switch_on)   Global_Sequence=3;
 _0x6D:
 	LDS  R26,_Global_Sequence
 	CPI  R26,LOW(0x0)
@@ -2515,102 +2519,88 @@ _0x6F:
 _0x70:
 	LDI  R30,LOW(3)
 	STS  _Global_Sequence,R30
-; 0000 01E7 
-; 0000 01E8         lcd_gotoxy(7, 0);
+; 0000 01E9 
+; 0000 01EA         lcd_gotoxy(7, 0);
 _0x6E:
 	LDI  R30,LOW(7)
-	CALL SUBOPT_0x28
-; 0000 01E9         sprintf(lcd_data, "%d", Global_Sequence);
-	CALL SUBOPT_0x29
+	CALL SUBOPT_0x2C
+; 0000 01EB         sprintf(lcd_data, "%d", Global_Sequence);
+	CALL SUBOPT_0x2D
 	CALL SUBOPT_0xD
-; 0000 01EA         lcd_puts(lcd_data);
-; 0000 01EB 
-; 0000 01EC         disp(0,Global_Sequence);
-	LDI  R30,LOW(0)
-	ST   -Y,R30
-	LDS  R30,_Global_Sequence
-	ST   -Y,R30
-	RCALL _disp
+; 0000 01EC         lcd_puts(lcd_data);
 ; 0000 01ED 
-; 0000 01EE         lcd_gotoxy(5, 1);
-	LDI  R30,LOW(5)
-	CALL SUBOPT_0x23
-; 0000 01EF         sprintf(lcd_data, "%d", E_flag[Global_Sequence]);
-	CALL SUBOPT_0x29
-	LDI  R31,0
-	SUBI R30,LOW(-_E_flag)
-	SBCI R31,HIGH(-_E_flag)
-	LD   R30,Z
-	CALL SUBOPT_0xD
-; 0000 01F0         lcd_puts(lcd_data);
-; 0000 01F1         lcd_gotoxy(7, 1);
+; 0000 01EE         disp(0,Global_Sequence);
+	CALL SUBOPT_0x2E
+; 0000 01EF 
+; 0000 01F0         lcd_gotoxy(5, 1);
+; 0000 01F1         sprintf(lcd_data, "%d", E_flag[Global_Sequence]);
+	CALL SUBOPT_0x2D
+	CALL SUBOPT_0x2F
+; 0000 01F2         lcd_puts(lcd_data);
+; 0000 01F3         lcd_gotoxy(7, 1);
 	LDI  R30,LOW(7)
-	CALL SUBOPT_0x23
-; 0000 01F2         sprintf(lcd_data, "%d", F_flag[Global_Sequence]);
-	CALL SUBOPT_0x29
-	LDI  R31,0
-	SUBI R30,LOW(-_F_flag)
-	SBCI R31,HIGH(-_F_flag)
-	LD   R30,Z
-	CALL SUBOPT_0xD
-; 0000 01F3         lcd_puts(lcd_data);
-; 0000 01F4 
-; 0000 01F5 
-; 0000 01F6         if((E_flag[Global_Sequence]==0)&&(F_flag[Global_Sequence]==0))
-	CALL SUBOPT_0x2A
-	CALL SUBOPT_0x26
-	BRNE _0x72
 	CALL SUBOPT_0x27
+; 0000 01F4         sprintf(lcd_data, "%d", F_flag[Global_Sequence]);
+	CALL SUBOPT_0x2D
+	CALL SUBOPT_0x30
+; 0000 01F5         lcd_puts(lcd_data);
+; 0000 01F6 
+; 0000 01F7 
+; 0000 01F8         if((E_flag[Global_Sequence]==0)&&(F_flag[Global_Sequence]==0))
+	CALL SUBOPT_0x31
+	CALL SUBOPT_0x2A
+	BRNE _0x72
+	CALL SUBOPT_0x2B
 	BREQ _0x73
 _0x72:
 	RJMP _0x71
 _0x73:
-; 0000 01F7         {
-; 0000 01F8             OCR1AH=500>>8;
+; 0000 01F9         {
+; 0000 01FA             OCR1AH=500>>8;
 	LDI  R30,LOW(1)
 	OUT  0x2B,R30
-; 0000 01F9             OCR1AL=500;
+; 0000 01FB             OCR1AL=500;
 	LDI  R30,LOW(244)
 	OUT  0x2A,R30
-; 0000 01FA             OCR3AH=500>>8;
+; 0000 01FC             OCR3AH=500>>8;
 	LDI  R30,LOW(1)
 	STS  135,R30
-; 0000 01FB             OCR3AL=500;
+; 0000 01FD             OCR3AL=500;
 	LDI  R30,LOW(244)
 	STS  134,R30
-; 0000 01FC         }
-; 0000 01FD         if((E_flag[Global_Sequence]==1)&&(F_flag[Global_Sequence]==0))
+; 0000 01FE         }
+; 0000 01FF         if((E_flag[Global_Sequence]==1)&&(F_flag[Global_Sequence]==0))
 _0x71:
-	CALL SUBOPT_0x2A
+	CALL SUBOPT_0x31
 	MOVW R0,R30
 	SUBI R30,LOW(-_E_flag)
 	SBCI R31,HIGH(-_E_flag)
 	LD   R26,Z
 	CPI  R26,LOW(0x1)
 	BRNE _0x75
-	CALL SUBOPT_0x27
+	CALL SUBOPT_0x2B
 	BREQ _0x76
 _0x75:
 	RJMP _0x74
 _0x76:
-; 0000 01FE         {
-; 0000 01FF             OCR1AH=800>>8;
+; 0000 0200         {
+; 0000 0201             OCR1AH=800>>8;
 	LDI  R30,LOW(3)
 	OUT  0x2B,R30
-; 0000 0200             OCR1AL=800;
+; 0000 0202             OCR1AL=800;
 	LDI  R30,LOW(32)
 	OUT  0x2A,R30
-; 0000 0201             OCR3AH=200>>8;
+; 0000 0203             OCR3AH=200>>8;
 	LDI  R30,LOW(0)
 	STS  135,R30
-; 0000 0202             OCR3AL=200;
+; 0000 0204             OCR3AL=200;
 	LDI  R30,LOW(200)
 	STS  134,R30
-; 0000 0203         }
-; 0000 0204         if((E_flag[Global_Sequence]==0)&&(F_flag[Global_Sequence]==1))
+; 0000 0205         }
+; 0000 0206         if((E_flag[Global_Sequence]==0)&&(F_flag[Global_Sequence]==1))
 _0x74:
+	CALL SUBOPT_0x31
 	CALL SUBOPT_0x2A
-	CALL SUBOPT_0x26
 	BRNE _0x78
 	MOVW R30,R0
 	SUBI R30,LOW(-_F_flag)
@@ -2621,40 +2611,39 @@ _0x74:
 _0x78:
 	RJMP _0x77
 _0x79:
-; 0000 0205         {
-; 0000 0206             OCR1AH=200>>8;
+; 0000 0207         {
+; 0000 0208             OCR1AH=200>>8;
 	LDI  R30,LOW(0)
 	OUT  0x2B,R30
-; 0000 0207             OCR1AL=200;
+; 0000 0209             OCR1AL=200;
 	LDI  R30,LOW(200)
 	OUT  0x2A,R30
-; 0000 0208             OCR3AH=800>>8;
+; 0000 020A             OCR3AH=800>>8;
 	LDI  R30,LOW(3)
 	STS  135,R30
-; 0000 0209             OCR3AL=800;
+; 0000 020B             OCR3AL=800;
 	LDI  R30,LOW(32)
 	STS  134,R30
-; 0000 020A         }
-; 0000 020B         delay_ms(100);
+; 0000 020C         }
+; 0000 020D         delay_ms(100);
 _0x77:
 	CALL SUBOPT_0x14
-; 0000 020C     }
+; 0000 020E     }
 	RJMP _0x68
 _0x6A:
-; 0000 020D     TERMINATE;
-	CALL SUBOPT_0x1D
-; 0000 020E     Global_Sequence=0;
+; 0000 020F     TERMINATE;
+	CALL SUBOPT_0x1F
+; 0000 0210     Global_Sequence=0;
 	STS  _Global_Sequence,R30
-; 0000 020F     OCR1A =0x00;
+; 0000 0211     OCR1A =0x00;
 	LDI  R30,LOW(0)
 	LDI  R31,HIGH(0)
 	OUT  0x2A+1,R31
 	OUT  0x2A,R30
-; 0000 0210     OCR1BH=0x00;
-	CALL SUBOPT_0x1E
-; 0000 0211     OCR1BL=0x00;
-; 0000 0212     for(i=0;i<4;i++)
-	LDI  R30,LOW(0)
+; 0000 0212     OCR1BH=0x00;
+	CALL SUBOPT_0x22
+; 0000 0213     OCR1BL=0x00;
+; 0000 0214     for(i=0;i<4;i++)
 	STS  _i,R30
 	STS  _i+1,R30
 _0x7B:
@@ -2662,52 +2651,372 @@ _0x7B:
 	LDS  R27,_i+1
 	SBIW R26,4
 	BRGE _0x7C
-; 0000 0213     {
-; 0000 0214         E_flag[i]=0;
-	LDS  R30,_i
-	LDS  R31,_i+1
-	SUBI R30,LOW(-_E_flag)
-	SBCI R31,HIGH(-_E_flag)
-	LDI  R26,LOW(0)
-	STD  Z+0,R26
-; 0000 0215         F_flag[i]=0;
-	LDS  R30,_i
-	LDS  R31,_i+1
-	CALL SUBOPT_0x20
-; 0000 0216     }
-	LDI  R26,LOW(_i)
-	LDI  R27,HIGH(_i)
-	CALL SUBOPT_0x2B
+; 0000 0215     {
+; 0000 0216         E_flag[i]=0;
+	CALL SUBOPT_0x32
+	CALL SUBOPT_0x33
+; 0000 0217         F_flag[i]=0;
+; 0000 0218     }
+	CALL SUBOPT_0x34
 	RJMP _0x7B
 _0x7C:
-; 0000 0217 }
+; 0000 0219     PORTB=0x00;
+	LDI  R30,LOW(0)
+	OUT  0x18,R30
+; 0000 021A     PORTC=0x00;
+	OUT  0x15,R30
+; 0000 021B }
+	RJMP _0x2080005
+;
+;void pump_valve()
+; 0000 021E {
+_pump_valve:
+; 0000 021F     unsigned char seq=0;
+; 0000 0220     unsigned char temp=50;
+; 0000 0221 
+; 0000 0222     delay_ms(50);
+	ST   -Y,R17
+	ST   -Y,R16
+;	seq -> R17
+;	temp -> R16
+	LDI  R17,0
+	LDI  R16,50
+	CALL SUBOPT_0x18
+; 0000 0223     INITIATE;
+	CALL SUBOPT_0x19
+; 0000 0224     while(Middle_switch_off)
+_0x7D:
+	SBIS 0x1,2
+	RJMP _0x7F
+; 0000 0225     {
+; 0000 0226         order(&seq);
+	IN   R30,SPL
+	IN   R31,SPH
+	ST   -Y,R31
+	ST   -Y,R30
+	PUSH R17
+	RCALL _order
+	POP  R17
+; 0000 0227         Global_Sequence=seq;
+	STS  _Global_Sequence,R17
+; 0000 0228 
+; 0000 0229         lcd_clear();
+	CALL SUBOPT_0xA
+; 0000 022A         lcd_gotoxy(0, 0);lcd_putsf("Duty : ");
+	__POINTW1FN _0x0,50
+	CALL SUBOPT_0x29
+; 0000 022B         lcd_gotoxy(6, 0);sprintf(lcd_data, "%2d %", temp);
+	LDI  R30,LOW(6)
+	CALL SUBOPT_0x2C
+	CALL SUBOPT_0x35
+	__POINTW1FN _0x0,58
+	ST   -Y,R31
+	ST   -Y,R30
+	MOV  R30,R16
+	CALL SUBOPT_0xD
+; 0000 022C         lcd_puts(lcd_data);
+; 0000 022D 
+; 0000 022E         disp(0,Global_Sequence);
+	CALL SUBOPT_0x2E
+; 0000 022F 
+; 0000 0230         lcd_gotoxy(5, 1);
+; 0000 0231         sprintf(lcd_data, "%d", E_flag[Global_Sequence]);
+	CALL SUBOPT_0x2D
+	CALL SUBOPT_0x2F
+; 0000 0232         lcd_puts(lcd_data);
+; 0000 0233         lcd_gotoxy(7, 1);
+	LDI  R30,LOW(7)
+	CALL SUBOPT_0x27
+; 0000 0234         sprintf(lcd_data, "%d", F_flag[Global_Sequence]);
+	CALL SUBOPT_0x2D
+	CALL SUBOPT_0x30
+; 0000 0235         lcd_puts(lcd_data);
+; 0000 0236 
+; 0000 0237 
+; 0000 0238         if((E_flag[Global_Sequence]==0)&&(F_flag[Global_Sequence]==0))
+	CALL SUBOPT_0x31
+	CALL SUBOPT_0x2A
+	BRNE _0x81
+	CALL SUBOPT_0x2B
+	BREQ _0x82
+_0x81:
+	RJMP _0x80
+_0x82:
+; 0000 0239         {
+; 0000 023A             OCR1AH=50*50>>8;
+	LDI  R30,LOW(9)
+	OUT  0x2B,R30
+; 0000 023B             OCR1AL=50*50;
+	LDI  R30,LOW(196)
+	OUT  0x2A,R30
+; 0000 023C             OCR3AH=50*50>>8;
+	LDI  R30,LOW(9)
+	STS  135,R30
+; 0000 023D             OCR3AL=50*50;
+	LDI  R30,LOW(196)
+	STS  134,R30
+; 0000 023E         }
+; 0000 023F         if((E_flag[Global_Sequence]==1)&&(F_flag[Global_Sequence]==0))
+_0x80:
+	CALL SUBOPT_0x31
+	MOVW R0,R30
+	SUBI R30,LOW(-_E_flag)
+	SBCI R31,HIGH(-_E_flag)
+	LD   R26,Z
+	CPI  R26,LOW(0x1)
+	BRNE _0x84
+	CALL SUBOPT_0x2B
+	BREQ _0x85
+_0x84:
+	RJMP _0x83
+_0x85:
+; 0000 0240         {
+; 0000 0241             OCR1AH=70*50>>8;
+	LDI  R30,LOW(13)
+	OUT  0x2B,R30
+; 0000 0242             OCR1AL=70*50;
+	LDI  R30,LOW(172)
+	OUT  0x2A,R30
+; 0000 0243             OCR3AH=30*50>>8;
+	LDI  R30,LOW(5)
+	STS  135,R30
+; 0000 0244             OCR3AL=30*50;
+	LDI  R30,LOW(220)
+	STS  134,R30
+; 0000 0245         }
+; 0000 0246         if((E_flag[Global_Sequence]==0)&&(F_flag[Global_Sequence]==1))
+_0x83:
+	CALL SUBOPT_0x31
+	CALL SUBOPT_0x2A
+	BRNE _0x87
+	MOVW R30,R0
+	SUBI R30,LOW(-_F_flag)
+	SBCI R31,HIGH(-_F_flag)
+	LD   R26,Z
+	CPI  R26,LOW(0x1)
+	BREQ _0x88
+_0x87:
+	RJMP _0x86
+_0x88:
+; 0000 0247         {
+; 0000 0248             OCR1AH=30*50>>8;
+	LDI  R30,LOW(5)
+	OUT  0x2B,R30
+; 0000 0249             OCR1AL=30*50;
+	LDI  R30,LOW(220)
+	OUT  0x2A,R30
+; 0000 024A             OCR3AH=70*50>>8;
+	LDI  R30,LOW(13)
+	STS  135,R30
+; 0000 024B             OCR3AL=70*50;
+	LDI  R30,LOW(172)
+	STS  134,R30
+; 0000 024C         }
+; 0000 024D 
+; 0000 024E         if(Left_switch_on)  temp++;
+_0x86:
+	SBIS 0x1,3
+	SUBI R16,-1
+; 0000 024F         if(Right_switch_on)  temp--;
+	SBIS 0x1,1
+	SUBI R16,1
+; 0000 0250         if(temp<1) temp=1;
+	CPI  R16,1
+	BRSH _0x8B
+	LDI  R16,LOW(1)
+; 0000 0251         if(temp>99)  temp=99;
+_0x8B:
+	CPI  R16,100
+	BRLO _0x8C
+	LDI  R16,LOW(99)
+; 0000 0252         // TEST by LED berfore Valve delivered...
+; 0000 0253         OCR1BH = temp*50 >>8;
+_0x8C:
+	LDI  R30,LOW(50)
+	MUL  R30,R16
+	MOVW R30,R0
+	CALL SUBOPT_0x21
+; 0000 0254         OCR1BL = temp*50;
+; 0000 0255 
+; 0000 0256         delay_ms(500);
+	LDI  R30,LOW(500)
+	LDI  R31,HIGH(500)
+	ST   -Y,R31
+	ST   -Y,R30
+	CALL _delay_ms
+; 0000 0257     }
+	RJMP _0x7D
+_0x7F:
+; 0000 0258     TERMINATE;
+	CALL SUBOPT_0x1F
+; 0000 0259     Global_Sequence=0;
+	STS  _Global_Sequence,R30
+; 0000 025A     OCR1AH=0x00;
+	CALL SUBOPT_0x20
+; 0000 025B     OCR1AL=0x00;
+; 0000 025C     OCR1BH=0x00;
+	CALL SUBOPT_0x22
+; 0000 025D     OCR1BL=0x00;
+; 0000 025E     OCR1BH=0x00;
+	OUT  0x29,R30
+; 0000 025F     OCR1BL=0x00;
+	LDI  R30,LOW(0)
+	OUT  0x28,R30
+; 0000 0260     for(i=0;i<4;i++)
+	STS  _i,R30
+	STS  _i+1,R30
+_0x8E:
+	LDS  R26,_i
+	LDS  R27,_i+1
+	SBIW R26,4
+	BRGE _0x8F
+; 0000 0261     {
+; 0000 0262         E_flag[i]=0;
+	CALL SUBOPT_0x32
+	CALL SUBOPT_0x33
+; 0000 0263         F_flag[i]=0;
+; 0000 0264     }
+	CALL SUBOPT_0x34
+	RJMP _0x8E
+_0x8F:
+; 0000 0265     PORTB=0x00;
+	LDI  R30,LOW(0)
+	OUT  0x18,R30
+; 0000 0266     PORTC=0x00;
+	OUT  0x15,R30
+; 0000 0267 }
+	RJMP _0x2080005
+;
+;//**************************************%%%&&&&&&&&&&&&&&&&&&&&&&&%%%********************************************
+;//**************************************%%% About Actual Movement %%%********************************************
+;//**************************************%%%%%%%%%%%%%%%%%%%%%%%%%%%%%********************************************
+;//Measuring Grab threshold
+;void measure_threshold()
+; 0000 026E {
+_measure_threshold:
+; 0000 026F     int seq = 0;//50% duty
+; 0000 0270     delay_ms(50);
+	ST   -Y,R17
+	ST   -Y,R16
+;	seq -> R16,R17
+	__GETWRN 16,17,0
+	CALL SUBOPT_0x18
+; 0000 0271 
+; 0000 0272     while(Middle_switch_off)
+_0x90:
+	SBIS 0x1,2
+	RJMP _0x92
+; 0000 0273     {
+; 0000 0274         if(Left_switch_on)  seq++;
+	SBIC 0x1,3
+	RJMP _0x93
+	__ADDWRN 16,17,1
+; 0000 0275         if(Right_switch_on)  seq--;
+_0x93:
+	SBIC 0x1,1
+	RJMP _0x94
+	__SUBWRN 16,17,1
+; 0000 0276         if(seq>3)  seq=0;
+_0x94:
+	__CPWRN 16,17,4
+	BRLT _0x95
+	__GETWRN 16,17,0
+; 0000 0277         if(seq==0 && Right_switch_on)  seq=3;
+_0x95:
+	CLR  R0
+	CP   R0,R16
+	CPC  R0,R17
+	BRNE _0x97
+	SBIS 0x1,1
+	RJMP _0x98
+_0x97:
+	RJMP _0x96
+_0x98:
+	__GETWRN 16,17,3
+; 0000 0278 
+; 0000 0279         mean_flex(seq,1);
+_0x96:
+	ST   -Y,R16
+	LDI  R30,LOW(1)
+	ST   -Y,R30
+	RCALL _mean_flex
+; 0000 027A         mean_pressure(seq,1);
+	ST   -Y,R16
+	LDI  R30,LOW(1)
+	ST   -Y,R30
+	RCALL _mean_pressure
+; 0000 027B 
+; 0000 027C         lcd_clear();
+	CALL SUBOPT_0xA
+; 0000 027D         lcd_gotoxy(0, 0);
+; 0000 027E         lcd_putsf("FLEX");
+	__POINTW1FN _0x0,64
+	CALL SUBOPT_0x29
+; 0000 027F         lcd_gotoxy(5, 0);
+	LDI  R30,LOW(5)
+	CALL SUBOPT_0x2C
+; 0000 0280         sprintf(lcd_data, "%d %", flex_mean[seq]);
+	CALL SUBOPT_0x35
+	__POINTW1FN _0x0,24
+	ST   -Y,R31
+	ST   -Y,R30
+	LDI  R26,LOW(_flex_mean)
+	LDI  R27,HIGH(_flex_mean)
+	ADD  R26,R16
+	ADC  R27,R17
+	LD   R30,X
+	CALL SUBOPT_0xD
+; 0000 0281         lcd_puts(lcd_data);
+; 0000 0282 
+; 0000 0283         lcd_gotoxy(0, 1);
+	LDI  R30,LOW(0)
+	CALL SUBOPT_0x27
+; 0000 0284         lcd_putsf("PRES");
+	__POINTW1FN _0x0,69
+	CALL SUBOPT_0x29
+; 0000 0285         lcd_gotoxy(5, 1);
+	LDI  R30,LOW(5)
+	CALL SUBOPT_0x27
+; 0000 0286         sprintf(lcd_data, "%d %", pressure_mean[seq]);
+	CALL SUBOPT_0x35
+	__POINTW1FN _0x0,24
+	ST   -Y,R31
+	ST   -Y,R30
+	LDI  R26,LOW(_pressure_mean)
+	LDI  R27,HIGH(_pressure_mean)
+	ADD  R26,R16
+	ADC  R27,R17
+	LD   R30,X
+	CALL SUBOPT_0xD
+; 0000 0287         lcd_puts(lcd_data);
+; 0000 0288 
+; 0000 0289         delay_ms(100);
+	CALL SUBOPT_0x14
+; 0000 028A     }
+	RJMP _0x90
+_0x92:
+; 0000 028B }
 _0x2080005:
 	LD   R16,Y+
 	LD   R17,Y+
 	RET
 ;
-;//**************************************%%%&&&&&&&&&&&&&&&&&&&&&&&%%%********************************************
-;//**************************************%%% About Actual Movement %%%********************************************
-;//**************************************%%%%%%%%%%%%%%%%%%%%%%%%%%%%%********************************************
-;
 ;// Moving fingers
 ;void Move_finger(unsigned char seq, unsigned char P, unsigned char Bend)
-; 0000 021F {
-; 0000 0220   unsigned char threshold;//Actively changing by Bend
-; 0000 0221   unsigned char Grab=0;//if 1, no more Grab (NO FLEXTION)
-; 0000 0222   unsigned char E_OR_F;
-; 0000 0223   unsigned int OCR_in;
-; 0000 0224   unsigned int OCR_out;
-; 0000 0225   //double r=0;//r=OCR_out/OCR_in
-; 0000 0226   double r_in=1;//inlet speed ratio
-; 0000 0227   double r_out=1;//outlet speed ratio
-; 0000 0228   double u=0;
-; 0000 0229   double error=0;
-; 0000 022A 
-; 0000 022B   /***INSERT TERM OF 'threshold' IN TERMS OF 'Bend'!!!***/
-; 0000 022C 
-; 0000 022D   // Grab or not?
-; 0000 022E   if(P>=threshold)  Grab=1;//Over the threshold : no more grab
+; 0000 028F {
+; 0000 0290   unsigned char threshold;//Actively changing by Bend
+; 0000 0291   unsigned char Grab=0;//if 1, no more Grab (NO FLEXTION)
+; 0000 0292   unsigned char E_OR_F;
+; 0000 0293   unsigned int OCR_in;
+; 0000 0294   unsigned int OCR_out;
+; 0000 0295   //double r=0;//r=OCR_out/OCR_in
+; 0000 0296   double r_in=1;//inlet speed ratio
+; 0000 0297   double r_out=1;//outlet speed ratio
+; 0000 0298   double u=0;
+; 0000 0299   double error=0;
+; 0000 029A 
+; 0000 029B   /***INSERT TERM OF 'threshold' IN TERMS OF 'Bend'!!!***/
+; 0000 029C   threshold = 70;//일단모르니까 상수로 둠
 ;	seq -> Y+26
 ;	P -> Y+25
 ;	Bend -> Y+24
@@ -2720,450 +3029,517 @@ _0x2080005:
 ;	r_out -> Y+14
 ;	u -> Y+10
 ;	error -> Y+6
-; 0000 022F   else Grab=0;//Under the threshold : Keep moving
-; 0000 0230 
-; 0000 0231 
-; 0000 0232   //Update angle (PID)
-; 0000 0233   E_OR_F = ((E_flag[seq]?-1:1)+(F_flag[seq]?1:-1))/2;//Extension:1, Flextion:-1, Do noting:0
-; 0000 0234   ang_desired = Bend+E_OR_F*delta_ang;//Ext:Bend+delta_ang, Flex:Bend-delta_ang, Stay:Bend
-; 0000 0235   error = ang_desired-ang_old[seq];
-; 0000 0236   error_sum[seq] += error;
-; 0000 0237   u = kp*error + ki*error_sum[seq]*(Ts/1000.) + kd*(error-error_old[seq])/(Ts/1000.);//Control value for OCR1A,OCR3A
-; 0000 0238   error_old[seq]=error;
-; 0000 0239 
-; 0000 023A   //Saturation condition...
-; 0000 023B   if(u>UPPER)       u=UPPER;
-; 0000 023C   else if(u<LOWER)  u=LOWER;
-; 0000 023D 
-; 0000 023E 
-; 0000 023F   // Input update
-; 0000 0240   /*구버전... (Input-Output ratio calcultate)
-; 0000 0241   //Grab&Flextion:r=1, !Grab&Flextion:r=1.4, !Grab&E_flag:r=0.6, !Grab&stay:r=1, Grab&!F_flag:Extension(r=0.6) or stay(r=1)
-; 0000 0242   r = (Grab&&F_flag[seq])?1:(((E_flag[seq]?0.2:1)+(F_flag[seq]?1.8:1))/2);
-; 0000 0243 
-; 0000 0244 
-; 0000 0245   //without PID
-; 0000 0246   OCR_in = IN_SPEED;  //Inlet
-; 0000 0247   OCR_out = r*OCR_in; //Outlet
-; 0000 0248 
-; 0000 0249   //with PID
-; 0000 024A   OCR_in = u;           //Inlet
-; 0000 024B   OCR_out = r*OCR_in;   //Outlet
-; 0000 024C   */
-; 0000 024D 
-; 0000 024E   /*신버전...
-; 0000 024F   기준 속도를 PID로 구한 후
-; 0000 0250   1. Grab 판정이 나지 않은 경우 Felxtion이면 inlet을 높은 비율로 outlet울 낮은 비율로 할당
-; 0000 0251   2. Grab 판정이 나지 않은 경우 Extension이면 inlet을 낮은 비율로 outlet울 높은 비율로 할당
-; 0000 0252   3. Grab 판정이 난 경우 Flextion이면 inlet/outlet 모두 기준속도사용
-; 0000 0253   4. Grab 판정이 난 경우 Extension이면 inlet을 낮은 비율로 outlet울 높은 비율로 할당
-; 0000 0254   5. 아무런 입력이 없는 경우 동적평형상태를 유지
-; 0000 0255   */
-; 0000 0256   //Grab&Flextion:r=1, !Grab&Flextion:r=1.4, !Grab&E_flag:r=0.6, !Grab&stay:r=1, Grab&!F_flag:Extension(r=0.6) or stay(r=1)
-; 0000 0257   r_in = (Grab&&F_flag[seq])?1:(((E_flag[seq]?0.2:1)+(F_flag[seq]?1.8:1))/2);
-; 0000 0258   //Grab&Flextion:r=1, !Grab&Flextion:r=0.6, !Grab&E_flag:r=1.4, !Grab&stay:r=1, Grab&!F_flag:Extension(r=1.4) or stay(r=1)
-; 0000 0259   r_out = (Grab&&F_flag[seq])?1:(((E_flag[seq]?1.8:1)+(F_flag[seq]?0.2:1))/2);
-; 0000 025A 
-; 0000 025B   //with PID
-; 0000 025C   OCR_in = r_in*u;          //Inlet
-; 0000 025D   OCR_out = r_out*u;        //Outlet
-; 0000 025E 
-; 0000 025F   //Define action
-; 0000 0260   OCR1AH = OCR_in>>8;
-; 0000 0261   OCR1AL = OCR_in;
-; 0000 0262   OCR3AH = OCR_out>>8;
-; 0000 0263   OCR3AL = OCR_out;
-; 0000 0264 }
+; 0000 029D   // Grab or not?
+; 0000 029E   if(P>=threshold)  Grab=1;//Over the threshold : no more grab
+; 0000 029F   else Grab=0;//Under the threshold : Keep moving
+; 0000 02A0 
+; 0000 02A1 
+; 0000 02A2   //Update angle (PID)
+; 0000 02A3   E_OR_F = ((E_flag[seq]?-1:1)+(F_flag[seq]?1:-1))/2;//Extension:1, Flextion:-1, Do noting:0
+; 0000 02A4   ang_desired = Bend+E_OR_F*delta_ang;//Ext:Bend+delta_ang, Flex:Bend-delta_ang, Stay:Bend
+; 0000 02A5   error = ang_desired-ang_old[seq];
+; 0000 02A6   error_sum[seq] += error;
+; 0000 02A7   u = kp*error + ki*error_sum[seq]*(Ts/1000.) + kd*(error-error_old[seq])/(Ts/1000.);//Control value for OCR1A,OCR3A
+; 0000 02A8   error_old[seq]=error;
+; 0000 02A9 
+; 0000 02AA   //Saturation condition...
+; 0000 02AB   if(u>UPPER)       u=UPPER;
+; 0000 02AC   else if(u<LOWER)  u=LOWER;
+; 0000 02AD 
+; 0000 02AE 
+; 0000 02AF   // Input update
+; 0000 02B0   /*구버전... (Input-Output ratio calcultate)
+; 0000 02B1   //Grab&Flextion:r=1, !Grab&Flextion:r=1.4, !Grab&E_flag:r=0.6, !Grab&stay:r=1, Grab&!F_flag:Extension(r=0.6) or stay(r=1)
+; 0000 02B2   r = (Grab&&F_flag[seq])?1:(((E_flag[seq]?0.2:1)+(F_flag[seq]?1.8:1))/2);
+; 0000 02B3 
+; 0000 02B4 
+; 0000 02B5   //without PID
+; 0000 02B6   OCR_in = IN_SPEED;  //Inlet
+; 0000 02B7   OCR_out = r*OCR_in; //Outlet
+; 0000 02B8 
+; 0000 02B9   //with PID
+; 0000 02BA   OCR_in = u;           //Inlet
+; 0000 02BB   OCR_out = r*OCR_in;   //Outlet
+; 0000 02BC   */
+; 0000 02BD 
+; 0000 02BE   /*신버전...
+; 0000 02BF   기준 속도를 PID로 구한 후
+; 0000 02C0   1. Grab 판정이 나지 않은 경우 Felxtion이면 inlet을 높은 비율로 outlet울 낮은 비율로 할당
+; 0000 02C1   2. Grab 판정이 나지 않은 경우 Extension이면 inlet을 낮은 비율로 outlet울 높은 비율로 할당
+; 0000 02C2   3. Grab 판정이 난 경우 Flextion이면 inlet/outlet 모두 기준속도사용
+; 0000 02C3   4. Grab 판정이 난 경우 Extension이면 inlet을 낮은 비율로 outlet울 높은 비율로 할당
+; 0000 02C4   5. 아무런 입력이 없는 경우 동적평형상태를 유지
+; 0000 02C5   */
+; 0000 02C6   //Grab&Flextion:r=1, !Grab&Flextion:r=1.4, !Grab&E_flag:r=0.6, !Grab&stay:r=1, Grab&!F_flag:Extension(r=0.6) or stay(r=1)
+; 0000 02C7   r_in = (Grab&&F_flag[seq])?1:(((E_flag[seq]?0.2:1)+(F_flag[seq]?1.8:1))/2);
+; 0000 02C8   //Grab&Flextion:r=1, !Grab&Flextion:r=0.6, !Grab&E_flag:r=1.4, !Grab&stay:r=1, Grab&!F_flag:Extension(r=1.4) or stay(r=1)
+; 0000 02C9   r_out = (Grab&&F_flag[seq])?1:(((E_flag[seq]?1.8:1)+(F_flag[seq]?0.2:1))/2);
+; 0000 02CA 
+; 0000 02CB   //with PID
+; 0000 02CC   OCR_in = r_in*u;          //Inlet
+; 0000 02CD   OCR_out = r_out*u;        //Outlet
+; 0000 02CE 
+; 0000 02CF   //Define action
+; 0000 02D0   OCR1AH = OCR_in>>8;
+; 0000 02D1   OCR1AL = OCR_in;
+; 0000 02D2   OCR3AH = OCR_out>>8;
+; 0000 02D3   OCR3AL = OCR_out;
+; 0000 02D4 }
 ;
 ;// About Daily mode
 ;void RUN_daily()
-; 0000 0268 {
-; 0000 0269   unsigned char seq=0;
-; 0000 026A   float ANG[4]={0};
-; 0000 026B 
-; 0000 026C   delay_ms(100);
+; 0000 02D8 {
+; 0000 02D9   unsigned char seq=0;
+; 0000 02DA   float ANG[4]={0};
+; 0000 02DB 
+; 0000 02DC   delay_ms(100);
 ;	seq -> R17
 ;	ANG -> Y+1
-; 0000 026D   while(Middle_switch_on)
-; 0000 026E   {
-; 0000 026F     INITIATE; //Initialization, Turn interrupts on
-; 0000 0270 
-; 0000 0271     order(&seq); //Control signal of each sequence
-; 0000 0272     Global_Sequence = seq;
-; 0000 0273 
-; 0000 0274     mean_pressure(seq,1);
-; 0000 0275     mean_flex(seq,1);
-; 0000 0276     ANG[seq] = flex_mean[seq]/(flex_max[seq]-flex_min[seq])*90.;//Angle : 0~90degrees
-; 0000 0277 
-; 0000 0278     Move_finger(seq,pressure_mean[seq], ANG[seq]);
-; 0000 0279     mean_flex(seq,1);
-; 0000 027A     ang_old[seq]=ANG[seq];
-; 0000 027B     delay_ms(Ts);//sequence gab,100times PWM pulse per each sequence
-; 0000 027C   }
-; 0000 027D   TERMINATE; // Turn interrupts off
-; 0000 027E   for(i=0;i<4;i++)
-; 0000 027F   {
-; 0000 0280     E_flag[i]=0;
-; 0000 0281     F_flag[i]=0;
-; 0000 0282   }
-; 0000 0283 
-; 0000 0284   Global_Sequence=0;
-; 0000 0285 }
+; 0000 02DD   INITIATE; //Initialization, Turn interrupts on
+; 0000 02DE   while(Middle_switch_on)
+; 0000 02DF   {
+; 0000 02E0     order(&seq); //Control signal of each sequence
+; 0000 02E1     Global_Sequence = seq;
+; 0000 02E2 
+; 0000 02E3     mean_pressure(seq,1);
+; 0000 02E4     mean_flex(seq,1);
+; 0000 02E5     ANG[seq] = (flex_max[seq]-flex_mean[seq])/(flex_max[seq]-flex_min[seq])*90.;//Angle : 0~90degrees, 굽어진 각도가 클수록 센서값이 작아짐
+; 0000 02E6 
+; 0000 02E7     Move_finger(seq,pressure_mean[seq], ANG[seq]);
+; 0000 02E8     //mean_flex(seq,1);
+; 0000 02E9     ang_old[seq]=ANG[seq];
+; 0000 02EA     delay_ms(Ts);//sequence gab,100times PWM pulse per each sequence
+; 0000 02EB   }
+; 0000 02EC   for(i=0;i<4;i++)
+; 0000 02ED   {
+; 0000 02EE     E_flag[i]=0;
+; 0000 02EF     F_flag[i]=0;
+; 0000 02F0   }
+; 0000 02F1   Global_Sequence=0;
+; 0000 02F2   OCR1AH=0x00;
+; 0000 02F3   OCR1AL=0x00;
+; 0000 02F4   OCR1BH=0x00;
+; 0000 02F5   OCR1BL=0x00;
+; 0000 02F6   OCR1BH=0x00;
+; 0000 02F7   OCR1BL=0x00;
+; 0000 02F8   PORTC=0x00;
+; 0000 02F9   TERMINATE; // Turn interrupts off
+; 0000 02FA }
+;/*
+;// About Rhabilitation
+;void Rehab()
+;{
+;    unsigned char seq=0;
 ;
+;    delay_ms(100);
+;    INITIATE; //Initialization, Turn interrupts on
+;    while(Middle_switch_on)
+;    {
+;        order(&seq); //Control signal of each sequence
+;        Global_Sequence = seq;
 ;
+;        mean_flex(seq,1);
+;        ANG[seq] = (flex_max[seq]-flex_mean[seq])/(flex_max[seq]-flex_min[seq])*90.;//Angle : 0~90degrees, 굽어진 각도가 클수록 센서값이 작아짐
+;
+;        mean_flex(seq,1);
+;        ang_old[seq]=ANG[seq];
+;        delay_ms(Ts);//sequence gab,100times PWM pulse per each sequence
+;    }
+;    TERMINATE; // Turn interrupts off
+;    Global_Sequence=0;
+;}
+;*/
 ;
 ;// ********************************************* main ******************************************************************
 ;void main(void)
-; 0000 028B {
+; 0000 0316 {
 _main:
-; 0000 028C // Declare your local variables here
-; 0000 028D // menu
-; 0000 028E unsigned char menu = 0;
-; 0000 028F unsigned char menu_Max = 7;
-; 0000 0290 
-; 0000 0291 // PA1~7 : Control switch (PA0안됨)
-; 0000 0292 PORTA=0x00;
+; 0000 0317 // Declare your local variables here
+; 0000 0318 // menu
+; 0000 0319 unsigned char menu = 0;
+; 0000 031A unsigned char menu_Max = 9;
+; 0000 031B 
+; 0000 031C // PA1~7 : Control switch (PA0안됨)
+; 0000 031D PORTA=0x00;
 ;	menu -> R17
 ;	menu_Max -> R16
 	LDI  R17,0
-	LDI  R16,7
+	LDI  R16,9
 	LDI  R30,LOW(0)
 	OUT  0x1B,R30
-; 0000 0293 DDRA=0x01;
+; 0000 031E DDRA=0x01;
 	LDI  R30,LOW(1)
 	OUT  0x1A,R30
-; 0000 0294 // PB6 : Pump
-; 0000 0295 PORTB=0x00;
+; 0000 031F // PB6 : Pump
+; 0000 0320 PORTB=0x00;
 	LDI  R30,LOW(0)
 	OUT  0x18,R30
-; 0000 0296 DDRB=0xFF;
+; 0000 0321 DDRB=0xFF;
 	LDI  R30,LOW(255)
 	OUT  0x17,R30
-; 0000 0297 // PC0~3 : Inlet Valve
-; 0000 0298 // PC4~7 : Outlet Valve
-; 0000 0299 PORTC=0x00;
+; 0000 0322 // PC0~3 : Inlet Valve
+; 0000 0323 // PC4~7 : Outlet Valve
+; 0000 0324 PORTC=0x00;
 	LDI  R30,LOW(0)
 	OUT  0x15,R30
-; 0000 029A DDRC=0xFF;
+; 0000 0325 DDRC=0xFF;
 	LDI  R30,LOW(255)
 	OUT  0x14,R30
-; 0000 029B // PD0~7 : LCD
-; 0000 029C PORTD=0x00;
+; 0000 0326 // PD0~7 : LCD
+; 0000 0327 PORTD=0x00;
 	LDI  R30,LOW(0)
 	OUT  0x12,R30
-; 0000 029D DDRD=0xFF;
+; 0000 0328 DDRD=0xFF;
 	LDI  R30,LOW(255)
 	OUT  0x11,R30
-; 0000 029E // PE0 : EMERGENCY switch
-; 0000 029F // PE1 : Interface switch - LEFT
-; 0000 02A0 // PE2 : Interface switch - MIDDLE
-; 0000 02A1 // PE3 : Interface switch - RIGHT
-; 0000 02A2 // PE4 : Mode change switch (Toggle)
-; 0000 02A3 // * PE5 : Thumb up....
-; 0000 02A4 PORTE=0x00;
+; 0000 0329 // PE0 : EMERGENCY switch
+; 0000 032A // PE1 : Interface switch - LEFT
+; 0000 032B // PE2 : Interface switch - MIDDLE
+; 0000 032C // PE3 : Interface switch - RIGHT
+; 0000 032D // PE4 : Mode change switch (Toggle)
+; 0000 032E // * PE5 : Thumb up....
+; 0000 032F PORTE=0x00;
 	LDI  R30,LOW(0)
 	OUT  0x3,R30
-; 0000 02A5 DDRE=0xC0;
+; 0000 0330 DDRE=0xC0;
 	LDI  R30,LOW(192)
 	OUT  0x2,R30
-; 0000 02A6 // PF0~3 : Pressure Sensor
-; 0000 02A7 // PF4~7 : Flex Sensor
-; 0000 02A8 PORTF=0x00;
+; 0000 0331 // PF0~3 : Pressure Sensor
+; 0000 0332 // PF4~7 : Flex Sensor
+; 0000 0333 PORTF=0x00;
 	LDI  R30,LOW(0)
 	STS  98,R30
-; 0000 02A9 DDRF=0x00;
+; 0000 0334 DDRF=0x00;
 	STS  97,R30
-; 0000 02AA PORTG=0x00;
+; 0000 0335 PORTG=0x00;
 	STS  101,R30
-; 0000 02AB DDRG=0x00;
+; 0000 0336 DDRG=0x00;
 	STS  100,R30
-; 0000 02AC 
-; 0000 02AD // Compare match interrupt  : Valve on
-; 0000 02AE // Overflow interrupt       : Valve off
-; 0000 02AF // Timer 1 B : PUMP pwm control by using OCR1B
-; 0000 02B0 // Timer 1   : Inlet Valve control
-; 0000 02B1 // Timer 3   : Outlet Valve on
-; 0000 02B2 
-; 0000 02B3 // Timer/Counter 1 initialization
-; 0000 02B4 TCCR1A=0x22;//Only OC1B can make PWM signal(whenever TIM1_COMPB is LOW), Else : GPIO
+; 0000 0337 
+; 0000 0338 // Compare match interrupt  : Valve on
+; 0000 0339 // Overflow interrupt       : Valve off
+; 0000 033A // Timer 1 B : PUMP pwm control by using OCR1B
+; 0000 033B // Timer 1   : Inlet Valve control
+; 0000 033C // Timer 3   : Outlet Valve on
+; 0000 033D 
+; 0000 033E // Timer/Counter 1 initialization
+; 0000 033F TCCR1A=0x22;//Only OC1B can make PWM signal(whenever TIM1_COMPB is LOW), Else : GPIO
 	LDI  R30,LOW(34)
 	OUT  0x2F,R30
-; 0000 02B5 //TCCR1A=0x02;
-; 0000 02B6 TCCR1B=0x1C;//Timer 1 : Fast PWM mode, prescale=256, TOP=ICR1 (PWM period:80ms)
+; 0000 0340 //TCCR1A=0x02;
+; 0000 0341 TCCR1B=0x1C;//Timer 1 : Fast PWM mode, prescale=256, TOP=ICR1 (PWM period:80ms)
 	LDI  R30,LOW(28)
 	OUT  0x2E,R30
-; 0000 02B7 TCNT1H=0x00;
+; 0000 0342 TCNT1H=0x00;
 	LDI  R30,LOW(0)
 	OUT  0x2D,R30
-; 0000 02B8 TCNT1L=0x00;
+; 0000 0343 TCNT1L=0x00;
 	OUT  0x2C,R30
-; 0000 02B9 ICR1H=0x13;
-	CALL SUBOPT_0x19
-; 0000 02BA ICR1L=0x87;
-; 0000 02BB OCR1AH=0x00;
-	LDI  R30,LOW(0)
-	OUT  0x2B,R30
-; 0000 02BC OCR1AL=0x00;
-	OUT  0x2A,R30
-; 0000 02BD OCR1BH=0x00;
-	CALL SUBOPT_0x1E
-; 0000 02BE OCR1BL=0x00;
-; 0000 02BF OCR1CH=0x00;
-	LDI  R30,LOW(0)
+; 0000 0344 ICR1H=0x13;
+	CALL SUBOPT_0x1A
+; 0000 0345 ICR1L=0x87;
+; 0000 0346 OCR1AH=0x00;
+	CALL SUBOPT_0x20
+; 0000 0347 OCR1AL=0x00;
+; 0000 0348 OCR1BH=0x00;
+	CALL SUBOPT_0x22
+; 0000 0349 OCR1BL=0x00;
+; 0000 034A OCR1CH=0x00;
 	STS  121,R30
-; 0000 02C0 OCR1CL=0x00;
+; 0000 034B OCR1CL=0x00;
+	LDI  R30,LOW(0)
 	STS  120,R30
-; 0000 02C1 // Timer/Counter 3 initialization
-; 0000 02C2 TCCR3A=0x02;//All port related with Timer3 : GPIO
+; 0000 034C // Timer/Counter 3 initialization
+; 0000 034D TCCR3A=0x02;//All port related with Timer3 : GPIO
 	LDI  R30,LOW(2)
 	STS  139,R30
-; 0000 02C3 TCCR3B=0x1C;//Timer 3 : Fast PWM mode, prescale=256, TOP=ICR3, f=clk/((TOP+1)*prescale)=80ms
+; 0000 034E TCCR3B=0x1C;//Timer 3 : Fast PWM mode, prescale=256, TOP=ICR3, f=clk/((TOP+1)*prescale)=80ms
 	LDI  R30,LOW(28)
 	STS  138,R30
-; 0000 02C4 TCNT3H=0x00;
+; 0000 034F TCNT3H=0x00;
 	LDI  R30,LOW(0)
 	STS  137,R30
-; 0000 02C5 TCNT3L=0x00;
+; 0000 0350 TCNT3L=0x00;
 	STS  136,R30
-; 0000 02C6 ICR3H=0x13;
+; 0000 0351 ICR3H=0x13;
 	LDI  R30,LOW(19)
 	STS  129,R30
-; 0000 02C7 ICR3L=0x87;
+; 0000 0352 ICR3L=0x87;
 	LDI  R30,LOW(135)
 	STS  128,R30
-; 0000 02C8 OCR3AH=0x00;
+; 0000 0353 OCR3AH=0x00;
 	LDI  R30,LOW(0)
 	STS  135,R30
-; 0000 02C9 OCR3AL=0x00;
+; 0000 0354 OCR3AL=0x00;
 	STS  134,R30
-; 0000 02CA OCR3BH=0x00;
+; 0000 0355 OCR3BH=0x00;
 	STS  133,R30
-; 0000 02CB OCR3BL=0x00;
+; 0000 0356 OCR3BL=0x00;
 	STS  132,R30
-; 0000 02CC OCR3CH=0x00;
+; 0000 0357 OCR3CH=0x00;
 	STS  131,R30
-; 0000 02CD OCR3CL=0x00;
+; 0000 0358 OCR3CL=0x00;
 	STS  130,R30
-; 0000 02CE //Timer/counter interrupt
-; 0000 02CF TIMSK = 0x00;
+; 0000 0359 //Timer/counter interrupt
+; 0000 035A TIMSK = 0x00;
 	OUT  0x37,R30
-; 0000 02D0 ETIMSK = 0x00;
+; 0000 035B ETIMSK = 0x00;
 	STS  125,R30
-; 0000 02D1 
-; 0000 02D2 //ADC setting
-; 0000 02D3 ADMUX=0x21;
+; 0000 035C 
+; 0000 035D //ADC setting
+; 0000 035E ADMUX=0x21;
 	LDI  R30,LOW(33)
 	OUT  0x7,R30
-; 0000 02D4 ADCSRA=0xCF;  //ADC enable, ADC start, ADC interrupt on, prescale:128(62.5kHz)
+; 0000 035F ADCSRA=0xCF;  //ADC enable, ADC start, ADC interrupt on, prescale:128(62.5kHz)
 	LDI  R30,LOW(207)
 	OUT  0x6,R30
-; 0000 02D5 //SFIOR=0x01;
-; 0000 02D6 
-; 0000 02D7 lcd_init(8);
+; 0000 0360 SFIOR=0x01;
+	LDI  R30,LOW(1)
+	OUT  0x20,R30
+; 0000 0361 
+; 0000 0362 lcd_init(8);
 	LDI  R30,LOW(8)
 	ST   -Y,R30
 	CALL _lcd_init
-; 0000 02D8 // Global enable interrupts
-; 0000 02D9 #asm("sei")
+; 0000 0363 // Global enable interrupts
+; 0000 0364 #asm("sei")
 	sei
-; 0000 02DA //SREG = 0x80;
-; 0000 02DB while (1)
-_0xA6:
-; 0000 02DC       {
-; 0000 02DD         if(Left_switch_on) menu++;
+; 0000 0365 //SREG = 0x80;
+; 0000 0366 while (1)
+_0xC2:
+; 0000 0367       {
+; 0000 0368         if(Left_switch_on) menu++;
 	SBIS 0x1,3
 	SUBI R17,-1
-; 0000 02DE         if(Right_switch_on) menu--;
+; 0000 0369         if(Right_switch_on) menu--;
 	SBIS 0x1,1
 	SUBI R17,1
-; 0000 02DF         if(menu > menu_Max)    menu = 0;
+; 0000 036A         if(menu > menu_Max)    menu = 0;
 	CP   R16,R17
-	BRSH _0xAB
+	BRSH _0xC7
 	LDI  R17,LOW(0)
-; 0000 02E0         if(menu == 0)
-_0xAB:
+; 0000 036B         if(menu == 0)
+_0xC7:
 	CPI  R17,0
-	BRNE _0xAC
-; 0000 02E1             if(Right_switch_on) menu = menu_Max;
+	BRNE _0xC8
+; 0000 036C             if(Right_switch_on) menu = menu_Max;
 	SBIS 0x1,1
 	MOV  R17,R16
-; 0000 02E2 
-; 0000 02E3         switch(menu)
-_0xAC:
+; 0000 036D 
+; 0000 036E         switch(menu)
+_0xC8:
 	CALL SUBOPT_0x11
-; 0000 02E4         {
-; 0000 02E5             case 0:
+; 0000 036F         {
+; 0000 0370             case 0:
 	SBIW R30,0
-	BRNE _0xB1
-; 0000 02E6                     lcd_clear();
+	BRNE _0xCD
+; 0000 0371                     lcd_clear();
 	CALL SUBOPT_0xA
-; 0000 02E7                     lcd_gotoxy(0, 0);
-; 0000 02E8                     lcd_putsf("1.Pressure TEST");
-	__POINTW1FN _0x0,50
-	CALL SUBOPT_0x25
-; 0000 02E9                     if(Middle_switch_on) pressure_test();
+; 0000 0372                     lcd_gotoxy(0, 0);
+; 0000 0373                     lcd_putsf("1.Pressure TEST");
+	__POINTW1FN _0x0,74
+	CALL SUBOPT_0x29
+; 0000 0374                     if(Middle_switch_on) pressure_test();
 	SBIS 0x1,2
 	RCALL _pressure_test
-; 0000 02EA                     delay_ms(150);
-	RJMP _0xC5
-; 0000 02EB                     break;
-; 0000 02EC 
-; 0000 02ED             case 1:
-_0xB1:
+; 0000 0375                     delay_ms(100);
+	RJMP _0xE5
+; 0000 0376                     break;
+; 0000 0377 
+; 0000 0378             case 1:
+_0xCD:
 	CPI  R30,LOW(0x1)
 	LDI  R26,HIGH(0x1)
 	CPC  R31,R26
-	BRNE _0xB3
-; 0000 02EE                     lcd_clear();
+	BRNE _0xCF
+; 0000 0379                     lcd_clear();
 	CALL SUBOPT_0xA
-; 0000 02EF                     lcd_gotoxy(0, 0);
-; 0000 02F0                     lcd_putsf("2.Pressure Tunning");
-	__POINTW1FN _0x0,66
-	CALL SUBOPT_0x25
-; 0000 02F1                     if(Middle_switch_on)    pressure_tuning();
+; 0000 037A                     lcd_gotoxy(0, 0);
+; 0000 037B                     lcd_putsf("2.Pressure Tunning");
+	__POINTW1FN _0x0,90
+	CALL SUBOPT_0x29
+; 0000 037C                     if(Middle_switch_on)    pressure_tuning();
 	SBIS 0x1,2
 	RCALL _pressure_tuning
-; 0000 02F2                     delay_ms(150);
-	RJMP _0xC5
-; 0000 02F3                     break;
-; 0000 02F4 
-; 0000 02F5             case 2:
-_0xB3:
+; 0000 037D                     delay_ms(100);
+	RJMP _0xE5
+; 0000 037E                     break;
+; 0000 037F 
+; 0000 0380             case 2:
+_0xCF:
 	CPI  R30,LOW(0x2)
 	LDI  R26,HIGH(0x2)
 	CPC  R31,R26
-	BRNE _0xB5
-; 0000 02F6                     lcd_clear();
+	BRNE _0xD1
+; 0000 0381                     lcd_clear();
 	CALL SUBOPT_0xA
-; 0000 02F7                     lcd_gotoxy(0, 0);
-; 0000 02F8                     lcd_putsf("3.Flex TEST");
-	__POINTW1FN _0x0,85
-	CALL SUBOPT_0x25
-; 0000 02F9                     if(Middle_switch_on)    flex_test();
+; 0000 0382                     lcd_gotoxy(0, 0);
+; 0000 0383                     lcd_putsf("3.Flex TEST");
+	__POINTW1FN _0x0,109
+	CALL SUBOPT_0x29
+; 0000 0384                     if(Middle_switch_on)    flex_test();
 	SBIS 0x1,2
 	RCALL _flex_test
-; 0000 02FA                     delay_ms(150);
-	RJMP _0xC5
-; 0000 02FB                     break;
-; 0000 02FC             case 3:
-_0xB5:
+; 0000 0385                     delay_ms(100);
+	RJMP _0xE5
+; 0000 0386                     break;
+; 0000 0387             case 3:
+_0xD1:
 	CPI  R30,LOW(0x3)
 	LDI  R26,HIGH(0x3)
 	CPC  R31,R26
-	BRNE _0xB7
-; 0000 02FD                     lcd_clear();
+	BRNE _0xD3
+; 0000 0388                     lcd_clear();
 	CALL SUBOPT_0xA
-; 0000 02FE                     lcd_gotoxy(0, 0);
-; 0000 02FF                     lcd_putsf("4.Flex Tunning");
-	__POINTW1FN _0x0,97
-	CALL SUBOPT_0x25
-; 0000 0300                     if(Middle_switch_on)    flex_tuning();
+; 0000 0389                     lcd_gotoxy(0, 0);
+; 0000 038A                     lcd_putsf("4.Flex Tunning");
+	__POINTW1FN _0x0,121
+	CALL SUBOPT_0x29
+; 0000 038B                     if(Middle_switch_on)    flex_tuning();
 	SBIS 0x1,2
 	RCALL _flex_tuning
-; 0000 0301                     delay_ms(150);
-	RJMP _0xC5
-; 0000 0302                     break;
-; 0000 0303 
-; 0000 0304             case 4:
-_0xB7:
+; 0000 038C                     delay_ms(100);
+	RJMP _0xE5
+; 0000 038D                     break;
+; 0000 038E 
+; 0000 038F             case 4:
+_0xD3:
 	CPI  R30,LOW(0x4)
 	LDI  R26,HIGH(0x4)
 	CPC  R31,R26
-	BRNE _0xB9
-; 0000 0305                     lcd_clear();
+	BRNE _0xD5
+; 0000 0390                     lcd_clear();
 	CALL SUBOPT_0xA
-; 0000 0306                     lcd_gotoxy(0, 0);
-; 0000 0307                     lcd_putsf("5.PWM TEST");
-	__POINTW1FN _0x0,112
-	CALL SUBOPT_0x25
-; 0000 0308                     if(Middle_switch_on)    check_pwm();
+; 0000 0391                     lcd_gotoxy(0, 0);
+; 0000 0392                     lcd_putsf("5.PWM TEST");
+	__POINTW1FN _0x0,136
+	CALL SUBOPT_0x29
+; 0000 0393                     if(Middle_switch_on)    check_pwm();
 	SBIS 0x1,2
 	RCALL _check_pwm
-; 0000 0309                     delay_ms(150);
-	RJMP _0xC5
-; 0000 030A                     break;
-; 0000 030B 
-; 0000 030C             case 5:
-_0xB9:
+; 0000 0394                     delay_ms(100);
+	RJMP _0xE5
+; 0000 0395                     break;
+; 0000 0396 
+; 0000 0397             case 5:
+_0xD5:
 	CPI  R30,LOW(0x5)
 	LDI  R26,HIGH(0x5)
 	CPC  R31,R26
-	BRNE _0xBB
-; 0000 030D                     lcd_clear();
+	BRNE _0xD7
+; 0000 0398                     lcd_clear();
 	CALL SUBOPT_0xA
-; 0000 030E                     lcd_gotoxy(0, 0);
-; 0000 030F                     lcd_putsf("6.PUMP TEST");
-	__POINTW1FN _0x0,123
-	CALL SUBOPT_0x25
-; 0000 0310                     if(Middle_switch_on)    PUMP_test();
+; 0000 0399                     lcd_gotoxy(0, 0);
+; 0000 039A                     lcd_putsf("6.PUMP TEST");
+	__POINTW1FN _0x0,147
+	CALL SUBOPT_0x29
+; 0000 039B                     if(Middle_switch_on)    PUMP_test();
 	SBIS 0x1,2
 	RCALL _PUMP_test
-; 0000 0311                     delay_ms(150);
-	RJMP _0xC5
-; 0000 0312                     break;
-; 0000 0313 
-; 0000 0314             case 6:
-_0xBB:
+; 0000 039C                     delay_ms(100);
+	RJMP _0xE5
+; 0000 039D                     break;
+; 0000 039E 
+; 0000 039F             case 6:
+_0xD7:
 	CPI  R30,LOW(0x6)
 	LDI  R26,HIGH(0x6)
 	CPC  R31,R26
-	BRNE _0xBD
-; 0000 0315                     lcd_clear();
+	BRNE _0xD9
+; 0000 03A0                     lcd_clear();
 	CALL SUBOPT_0xA
-; 0000 0316                     lcd_gotoxy(0, 0);
-; 0000 0317                     lcd_putsf("7.Order TEST");
-	__POINTW1FN _0x0,135
-	CALL SUBOPT_0x25
-; 0000 0318                     if(Middle_switch_on)    test_order();
+; 0000 03A1                     lcd_gotoxy(0, 0);
+; 0000 03A2                     lcd_putsf("7.Order TEST");
+	__POINTW1FN _0x0,159
+	CALL SUBOPT_0x29
+; 0000 03A3                     if(Middle_switch_on)    test_order();
 	SBIS 0x1,2
 	RCALL _test_order
-; 0000 0319                     delay_ms(150);
-	RJMP _0xC5
-; 0000 031A                     break;
-; 0000 031B 
-; 0000 031C             case 7:
-_0xBD:
+; 0000 03A4                     delay_ms(100);
+	RJMP _0xE5
+; 0000 03A5                     break;
+; 0000 03A6 
+; 0000 03A7             case 7:
+_0xD9:
 	CPI  R30,LOW(0x7)
 	LDI  R26,HIGH(0x7)
 	CPC  R31,R26
-	BRNE _0xC1
-; 0000 031D                     lcd_clear();
+	BRNE _0xDB
+; 0000 03A8                     lcd_clear();
 	CALL SUBOPT_0xA
-; 0000 031E                     lcd_gotoxy(0, 0);
-; 0000 031F                     lcd_putsf("8.Valve Order");
-	__POINTW1FN _0x0,148
-	CALL SUBOPT_0x25
-; 0000 0320                     if(Middle_switch_on)    valve_order();
+; 0000 03A9                     lcd_gotoxy(0, 0);
+; 0000 03AA                     lcd_putsf("8.Valve Order");
+	__POINTW1FN _0x0,172
+	CALL SUBOPT_0x29
+; 0000 03AB                     if(Middle_switch_on)    valve_order();
 	SBIS 0x1,2
 	RCALL _valve_order
-; 0000 0321                     delay_ms(150);
-	RJMP _0xC5
-; 0000 0322                     break;
-; 0000 0323 
-; 0000 0324              default :
-_0xC1:
-; 0000 0325                     lcd_clear();
+; 0000 03AC                     delay_ms(100);
+	RJMP _0xE5
+; 0000 03AD                     break;
+; 0000 03AE 
+; 0000 03AF             case 8:
+_0xDB:
+	CPI  R30,LOW(0x8)
+	LDI  R26,HIGH(0x8)
+	CPC  R31,R26
+	BRNE _0xDD
+; 0000 03B0                     lcd_clear();
 	CALL SUBOPT_0xA
-; 0000 0326                     lcd_gotoxy(0, 0);
-; 0000 0327                     lcd_putsf("**BREAK!**");
-	__POINTW1FN _0x0,162
-	CALL SUBOPT_0x25
-; 0000 0328                     delay_ms(150);
-_0xC5:
-	LDI  R30,LOW(150)
-	LDI  R31,HIGH(150)
+; 0000 03B1                     lcd_gotoxy(0, 0);
+; 0000 03B2                     lcd_putsf("9.Threshold?");
+	__POINTW1FN _0x0,186
+	CALL SUBOPT_0x29
+; 0000 03B3                     if(Middle_switch_on)    measure_threshold();
+	SBIS 0x1,2
+	RCALL _measure_threshold
+; 0000 03B4                     delay_ms(100);
+	RJMP _0xE5
+; 0000 03B5                     break;
+; 0000 03B6 
+; 0000 03B7             case 9:
+_0xDD:
+	CPI  R30,LOW(0x9)
+	LDI  R26,HIGH(0x9)
+	CPC  R31,R26
+	BRNE _0xE1
+; 0000 03B8                     lcd_clear();
+	CALL SUBOPT_0xA
+; 0000 03B9                     lcd_gotoxy(0, 0);
+; 0000 03BA                     lcd_putsf("10.PUMP VALVE");
+	__POINTW1FN _0x0,199
+	CALL SUBOPT_0x29
+; 0000 03BB                     if(Middle_switch_on)    pump_valve();
+	SBIS 0x1,2
+	RCALL _pump_valve
+; 0000 03BC                     delay_ms(100);
+	RJMP _0xE5
+; 0000 03BD                     break;
+; 0000 03BE 
+; 0000 03BF              default :
+_0xE1:
+; 0000 03C0                     lcd_clear();
+	CALL SUBOPT_0xA
+; 0000 03C1                     lcd_gotoxy(0, 0);
+; 0000 03C2                     lcd_putsf("**BREAK!**");
+	__POINTW1FN _0x0,213
+	CALL SUBOPT_0x29
+; 0000 03C3                     delay_ms(100);
+_0xE5:
+	LDI  R30,LOW(100)
+	LDI  R31,HIGH(100)
 	ST   -Y,R31
 	ST   -Y,R30
 	CALL _delay_ms
-; 0000 0329                     break;
-; 0000 032A 
-; 0000 032B          }
-; 0000 032C       }
-	RJMP _0xA6
-; 0000 032D 
-; 0000 032E }
-_0xC2:
+; 0000 03C4                     break;
+; 0000 03C5 
+; 0000 03C6          }
+; 0000 03C7       }
 	RJMP _0xC2
+; 0000 03C8 
+; 0000 03C9 }
+_0xE2:
+	RJMP _0xE2
 	#ifndef __SLEEP_DEFINED__
 	#define __SLEEP_DEFINED__
 	.EQU __se_bit=0x20
@@ -3203,7 +3579,11 @@ _0x2000012:
 	LDD  R26,Y+2
 	LDD  R27,Y+2+1
 	ADIW R26,2
-	CALL SUBOPT_0x2B
+	LD   R30,X+
+	LD   R31,X+
+	ADIW R30,1
+	ST   -X,R31
+	ST   -X,R30
 	SBIW R30,1
 	LDD  R26,Y+4
 	STD  Z+0,R26
@@ -3212,7 +3592,11 @@ _0x2000012:
 	CALL __GETW1P
 	TST  R31
 	BRMI _0x2000014
-	CALL SUBOPT_0x2B
+	LD   R30,X+
+	LD   R31,X+
+	ADIW R30,1
+	ST   -X,R31
+	ST   -X,R30
 _0x2000014:
 _0x2000013:
 	RJMP _0x2000015
@@ -3258,7 +3642,7 @@ _0x2000016:
 	LDI  R17,LOW(1)
 	RJMP _0x200001E
 _0x200001D:
-	CALL SUBOPT_0x2C
+	CALL SUBOPT_0x36
 _0x200001E:
 	RJMP _0x200001B
 _0x200001C:
@@ -3266,7 +3650,7 @@ _0x200001C:
 	BRNE _0x200001F
 	CPI  R18,37
 	BRNE _0x2000020
-	CALL SUBOPT_0x2C
+	CALL SUBOPT_0x36
 	RJMP _0x20000C9
 _0x2000020:
 	LDI  R17,LOW(2)
@@ -3323,26 +3707,26 @@ _0x2000029:
 	MOV  R30,R18
 	CPI  R30,LOW(0x63)
 	BRNE _0x200002F
-	CALL SUBOPT_0x2D
+	CALL SUBOPT_0x37
 	LDD  R30,Y+16
 	LDD  R31,Y+16+1
 	LDD  R26,Z+4
 	ST   -Y,R26
-	CALL SUBOPT_0x2E
+	CALL SUBOPT_0x38
 	RJMP _0x2000030
 _0x200002F:
 	CPI  R30,LOW(0x73)
 	BRNE _0x2000032
-	CALL SUBOPT_0x2D
-	CALL SUBOPT_0x2F
+	CALL SUBOPT_0x37
+	CALL SUBOPT_0x39
 	CALL _strlen
 	MOV  R17,R30
 	RJMP _0x2000033
 _0x2000032:
 	CPI  R30,LOW(0x70)
 	BRNE _0x2000035
-	CALL SUBOPT_0x2D
-	CALL SUBOPT_0x2F
+	CALL SUBOPT_0x37
+	CALL SUBOPT_0x39
 	CALL _strlenf
 	MOV  R17,R30
 	ORI  R16,LOW(8)
@@ -3387,8 +3771,8 @@ _0x2000040:
 _0x200003D:
 	SBRS R16,2
 	RJMP _0x2000042
-	CALL SUBOPT_0x2D
-	CALL SUBOPT_0x30
+	CALL SUBOPT_0x37
+	CALL SUBOPT_0x3A
 	LDD  R26,Y+11
 	TST  R26
 	BRPL _0x2000043
@@ -3408,8 +3792,8 @@ _0x2000044:
 _0x2000045:
 	RJMP _0x2000046
 _0x2000042:
-	CALL SUBOPT_0x2D
-	CALL SUBOPT_0x30
+	CALL SUBOPT_0x37
+	CALL SUBOPT_0x3A
 _0x2000046:
 _0x2000036:
 	SBRC R16,0
@@ -3432,7 +3816,7 @@ _0x200004D:
 _0x200004B:
 	LDI  R18,LOW(32)
 _0x200004E:
-	CALL SUBOPT_0x2C
+	CALL SUBOPT_0x36
 	SUBI R21,LOW(1)
 	RJMP _0x2000048
 _0x200004A:
@@ -3458,7 +3842,7 @@ _0x2000053:
 	STD  Y+6,R26
 	STD  Y+6+1,R27
 _0x2000054:
-	CALL SUBOPT_0x2C
+	CALL SUBOPT_0x36
 	CPI  R21,0
 	BREQ _0x2000055
 	SUBI R21,LOW(1)
@@ -3537,7 +3921,7 @@ _0x20000CA:
 	RJMP _0x200006A
 	ANDI R16,LOW(251)
 	ST   -Y,R20
-	CALL SUBOPT_0x2E
+	CALL SUBOPT_0x38
 	CPI  R21,0
 	BREQ _0x200006B
 	SUBI R21,LOW(1)
@@ -3545,7 +3929,7 @@ _0x200006B:
 _0x200006A:
 _0x2000069:
 _0x2000061:
-	CALL SUBOPT_0x2C
+	CALL SUBOPT_0x36
 	CPI  R21,0
 	BREQ _0x200006C
 	SUBI R21,LOW(1)
@@ -3567,7 +3951,7 @@ _0x200006E:
 	SUBI R21,LOW(1)
 	LDI  R30,LOW(32)
 	ST   -Y,R30
-	CALL SUBOPT_0x2E
+	CALL SUBOPT_0x38
 	RJMP _0x200006E
 _0x2000070:
 _0x200006D:
@@ -3589,7 +3973,7 @@ _sprintf:
 	MOV  R15,R24
 	SBIW R28,6
 	CALL __SAVELOCR4
-	CALL SUBOPT_0x31
+	CALL SUBOPT_0x3B
 	SBIW R30,0
 	BRNE _0x2000072
 	LDI  R30,LOW(65535)
@@ -3600,7 +3984,7 @@ _0x2000072:
 	ADIW R26,6
 	CALL __ADDW2R15
 	MOVW R16,R26
-	CALL SUBOPT_0x31
+	CALL SUBOPT_0x3B
 	STD  Y+6,R30
 	STD  Y+6+1,R31
 	LDI  R30,LOW(0)
@@ -3711,7 +4095,7 @@ _lcd_read_byte0_G101:
 	RET
 _lcd_gotoxy:
 	CALL __lcd_ready
-	CALL SUBOPT_0x24
+	CALL SUBOPT_0x28
 	SUBI R30,LOW(-__base_y_G101)
 	SBCI R31,HIGH(-__base_y_G101)
 	LD   R30,Z
@@ -3843,20 +4227,20 @@ _lcd_init:
 	LD   R30,Y
 	SUBI R30,-LOW(192)
 	__PUTB1MN __base_y_G101,3
-	CALL SUBOPT_0x32
-	CALL SUBOPT_0x32
-	CALL SUBOPT_0x32
+	CALL SUBOPT_0x3C
+	CALL SUBOPT_0x3C
+	CALL SUBOPT_0x3C
 	RCALL __long_delay_G101
 	LDI  R30,LOW(32)
 	ST   -Y,R30
 	RCALL __lcd_init_write_G101
 	RCALL __long_delay_G101
 	LDI  R30,LOW(40)
-	CALL SUBOPT_0x33
+	CALL SUBOPT_0x3D
 	LDI  R30,LOW(4)
-	CALL SUBOPT_0x33
+	CALL SUBOPT_0x3D
 	LDI  R30,LOW(133)
-	CALL SUBOPT_0x33
+	CALL SUBOPT_0x3D
     in    r26,__lcd_direction
     andi  r26,0xf                 ;set as input
     out   __lcd_direction,r26
@@ -4080,7 +4464,7 @@ SUBOPT_0x9:
 	ST   -Y,R30
 	JMP  _delay_ms
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 17 TIMES, CODE SIZE REDUCTION:93 WORDS
+;OPTIMIZER ADDED SUBROUTINE, CALLED 21 TIMES, CODE SIZE REDUCTION:117 WORDS
 SUBOPT_0xA:
 	CALL _lcd_clear
 	LDI  R30,LOW(0)
@@ -4112,7 +4496,7 @@ SUBOPT_0xC:
 	MOV  R30,R17
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 13 TIMES, CODE SIZE REDUCTION:153 WORDS
+;OPTIMIZER ADDED SUBROUTINE, CALLED 18 TIMES, CODE SIZE REDUCTION:218 WORDS
 SUBOPT_0xD:
 	CLR  R31
 	CLR  R22
@@ -4189,7 +4573,7 @@ SUBOPT_0x13:
 	MOV  R30,R17
 	RJMP SUBOPT_0xD
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 6 TIMES, CODE SIZE REDUCTION:17 WORDS
+;OPTIMIZER ADDED SUBROUTINE, CALLED 7 TIMES, CODE SIZE REDUCTION:21 WORDS
 SUBOPT_0x14:
 	LDI  R30,LOW(100)
 	LDI  R31,HIGH(100)
@@ -4224,7 +4608,7 @@ SUBOPT_0x17:
 	SBCI R27,HIGH(-_flex_mean)
 	RJMP SUBOPT_0x4
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:5 WORDS
+;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:13 WORDS
 SUBOPT_0x18:
 	LDI  R30,LOW(50)
 	LDI  R31,HIGH(50)
@@ -4232,21 +4616,33 @@ SUBOPT_0x18:
 	ST   -Y,R30
 	JMP  _delay_ms
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:1 WORDS
+;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:3 WORDS
 SUBOPT_0x19:
+	LDI  R30,LOW(20)
+	OUT  0x37,R30
+	STS  125,R30
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:1 WORDS
+SUBOPT_0x1A:
 	LDI  R30,LOW(19)
 	OUT  0x27,R30
 	LDI  R30,LOW(135)
 	OUT  0x26,R30
 	RET
 
+;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:1 WORDS
+SUBOPT_0x1B:
+	CALL __GETD1S0
+	RET
+
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:3 WORDS
-SUBOPT_0x1A:
+SUBOPT_0x1C:
 	CALL __PUTD1S0
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:15 WORDS
-SUBOPT_0x1B:
+SUBOPT_0x1D:
 	__POINTW1FN _0x0,19
 	ST   -Y,R31
 	ST   -Y,R30
@@ -4266,7 +4662,7 @@ SUBOPT_0x1B:
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:9 WORDS
-SUBOPT_0x1C:
+SUBOPT_0x1E:
 	CALL __PUTPARD1
 	LDI  R24,4
 	CALL _sprintf
@@ -4278,22 +4674,39 @@ SUBOPT_0x1C:
 	CALL _lcd_puts
 	RJMP SUBOPT_0x14
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x1D:
+;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:5 WORDS
+SUBOPT_0x1F:
 	LDI  R30,LOW(0)
 	OUT  0x37,R30
 	STS  125,R30
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x1E:
+SUBOPT_0x20:
+	LDI  R30,LOW(0)
+	OUT  0x2B,R30
+	OUT  0x2A,R30
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:2 WORDS
+SUBOPT_0x21:
+	CALL __ASRW8
+	OUT  0x29,R30
+	LDI  R26,LOW(50)
+	MULS R16,R26
+	MOVW R30,R0
+	OUT  0x28,R30
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:6 WORDS
+SUBOPT_0x22:
 	LDI  R30,LOW(0)
 	OUT  0x29,R30
 	OUT  0x28,R30
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:7 WORDS
-SUBOPT_0x1F:
+SUBOPT_0x23:
 	MOV  R30,R17
 	LDI  R26,LOW(1)
 	LDI  R27,HIGH(1)
@@ -4305,8 +4718,8 @@ SUBOPT_0x1F:
 	SBIW R30,0
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x20:
+;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:3 WORDS
+SUBOPT_0x24:
 	SUBI R30,LOW(-_F_flag)
 	SBCI R31,HIGH(-_F_flag)
 	LDI  R26,LOW(0)
@@ -4314,7 +4727,7 @@ SUBOPT_0x20:
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:7 WORDS
-SUBOPT_0x21:
+SUBOPT_0x25:
 	MOV  R30,R17
 	LDI  R26,LOW(16)
 	LDI  R27,HIGH(16)
@@ -4327,34 +4740,34 @@ SUBOPT_0x21:
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x22:
+SUBOPT_0x26:
 	SUBI R30,LOW(-_E_flag)
 	SBCI R31,HIGH(-_E_flag)
 	LDI  R26,LOW(0)
 	STD  Z+0,R26
 	RJMP SUBOPT_0x11
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:3 WORDS
-SUBOPT_0x23:
+;OPTIMIZER ADDED SUBROUTINE, CALLED 7 TIMES, CODE SIZE REDUCTION:15 WORDS
+SUBOPT_0x27:
 	ST   -Y,R30
 	LDI  R30,LOW(1)
 	ST   -Y,R30
 	JMP  _lcd_gotoxy
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:3 WORDS
-SUBOPT_0x24:
+SUBOPT_0x28:
 	LD   R30,Y
 	LDI  R31,0
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 17 TIMES, CODE SIZE REDUCTION:29 WORDS
-SUBOPT_0x25:
+;OPTIMIZER ADDED SUBROUTINE, CALLED 22 TIMES, CODE SIZE REDUCTION:39 WORDS
+SUBOPT_0x29:
 	ST   -Y,R31
 	ST   -Y,R30
 	JMP  _lcd_putsf
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:3 WORDS
-SUBOPT_0x26:
+;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:9 WORDS
+SUBOPT_0x2A:
 	MOVW R0,R30
 	SUBI R30,LOW(-_E_flag)
 	SBCI R31,HIGH(-_E_flag)
@@ -4362,8 +4775,8 @@ SUBOPT_0x26:
 	CPI  R26,LOW(0x0)
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:3 WORDS
-SUBOPT_0x27:
+;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:9 WORDS
+SUBOPT_0x2B:
 	MOVW R30,R0
 	SUBI R30,LOW(-_F_flag)
 	SBCI R31,HIGH(-_F_flag)
@@ -4371,15 +4784,15 @@ SUBOPT_0x27:
 	CPI  R26,LOW(0x0)
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:6 WORDS
-SUBOPT_0x28:
+;OPTIMIZER ADDED SUBROUTINE, CALLED 6 TIMES, CODE SIZE REDUCTION:12 WORDS
+SUBOPT_0x2C:
 	ST   -Y,R30
 	LDI  R30,LOW(0)
 	ST   -Y,R30
 	JMP  _lcd_gotoxy
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:13 WORDS
-SUBOPT_0x29:
+;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:29 WORDS
+SUBOPT_0x2D:
 	LDI  R30,LOW(_lcd_data)
 	LDI  R31,HIGH(_lcd_data)
 	ST   -Y,R31
@@ -4390,14 +4803,57 @@ SUBOPT_0x29:
 	LDS  R30,_Global_Sequence
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:3 WORDS
-SUBOPT_0x2A:
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:5 WORDS
+SUBOPT_0x2E:
+	LDI  R30,LOW(0)
+	ST   -Y,R30
+	LDS  R30,_Global_Sequence
+	ST   -Y,R30
+	CALL _disp
+	LDI  R30,LOW(5)
+	RJMP SUBOPT_0x27
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:3 WORDS
+SUBOPT_0x2F:
+	LDI  R31,0
+	SUBI R30,LOW(-_E_flag)
+	SBCI R31,HIGH(-_E_flag)
+	LD   R30,Z
+	RJMP SUBOPT_0xD
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:3 WORDS
+SUBOPT_0x30:
+	LDI  R31,0
+	SUBI R30,LOW(-_F_flag)
+	SBCI R31,HIGH(-_F_flag)
+	LD   R30,Z
+	RJMP SUBOPT_0xD
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 6 TIMES, CODE SIZE REDUCTION:12 WORDS
+SUBOPT_0x31:
 	LDS  R30,_Global_Sequence
 	LDI  R31,0
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:3 WORDS
-SUBOPT_0x2B:
+;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:3 WORDS
+SUBOPT_0x32:
+	LDS  R30,_i
+	LDS  R31,_i+1
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:3 WORDS
+SUBOPT_0x33:
+	SUBI R30,LOW(-_E_flag)
+	SBCI R31,HIGH(-_E_flag)
+	LDI  R26,LOW(0)
+	STD  Z+0,R26
+	RCALL SUBOPT_0x32
+	RJMP SUBOPT_0x24
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:2 WORDS
+SUBOPT_0x34:
+	LDI  R26,LOW(_i)
+	LDI  R27,HIGH(_i)
 	LD   R30,X+
 	LD   R31,X+
 	ADIW R30,1
@@ -4405,8 +4861,16 @@ SUBOPT_0x2B:
 	ST   -X,R30
 	RET
 
+;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:1 WORDS
+SUBOPT_0x35:
+	LDI  R30,LOW(_lcd_data)
+	LDI  R31,HIGH(_lcd_data)
+	ST   -Y,R31
+	ST   -Y,R30
+	RET
+
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:21 WORDS
-SUBOPT_0x2C:
+SUBOPT_0x36:
 	ST   -Y,R18
 	LDD  R30,Y+13
 	LDD  R31,Y+13+1
@@ -4418,7 +4882,7 @@ SUBOPT_0x2C:
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:9 WORDS
-SUBOPT_0x2D:
+SUBOPT_0x37:
 	LDD  R30,Y+16
 	LDD  R31,Y+16+1
 	SBIW R30,4
@@ -4427,7 +4891,7 @@ SUBOPT_0x2D:
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:7 WORDS
-SUBOPT_0x2E:
+SUBOPT_0x38:
 	LDD  R30,Y+13
 	LDD  R31,Y+13+1
 	ST   -Y,R31
@@ -4438,7 +4902,7 @@ SUBOPT_0x2E:
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:6 WORDS
-SUBOPT_0x2F:
+SUBOPT_0x39:
 	LDD  R26,Y+16
 	LDD  R27,Y+16+1
 	ADIW R26,4
@@ -4450,7 +4914,7 @@ SUBOPT_0x2F:
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:2 WORDS
-SUBOPT_0x30:
+SUBOPT_0x3A:
 	LDD  R26,Y+16
 	LDD  R27,Y+16+1
 	ADIW R26,4
@@ -4460,7 +4924,7 @@ SUBOPT_0x30:
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x31:
+SUBOPT_0x3B:
 	MOVW R26,R28
 	ADIW R26,12
 	CALL __ADDW2R15
@@ -4468,14 +4932,14 @@ SUBOPT_0x31:
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:5 WORDS
-SUBOPT_0x32:
+SUBOPT_0x3C:
 	CALL __long_delay_G101
 	LDI  R30,LOW(48)
 	ST   -Y,R30
 	JMP  __lcd_init_write_G101
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:3 WORDS
-SUBOPT_0x33:
+SUBOPT_0x3D:
 	ST   -Y,R30
 	CALL __lcd_write_data
 	JMP  __long_delay_G101
@@ -4507,6 +4971,16 @@ __ANEGW1:
 	SBCI R31,0
 	RET
 
+__ANEGD1:
+	COM  R31
+	COM  R22
+	COM  R23
+	NEG  R30
+	SBCI R31,-1
+	SBCI R22,-1
+	SBCI R23,-1
+	RET
+
 __LSLB12:
 	TST  R30
 	MOV  R0,R30
@@ -4530,6 +5004,22 @@ __LSLW12L:
 	DEC  R0
 	BRNE __LSLW12L
 __LSLW12R:
+	RET
+
+__ASRD12:
+	TST  R30
+	MOV  R0,R30
+	MOVW R30,R26
+	MOVW R22,R24
+	BREQ __ASRD12R
+__ASRD12L:
+	ASR  R23
+	ROR  R22
+	ROR  R31
+	ROR  R30
+	DEC  R0
+	BRNE __ASRD12L
+__ASRD12R:
 	RET
 
 __ASRW8:
@@ -4556,12 +5046,54 @@ __MULW12U:
 	ADD  R31,R1
 	RET
 
+__MULD12U:
+	MUL  R23,R26
+	MOV  R23,R0
+	MUL  R22,R27
+	ADD  R23,R0
+	MUL  R31,R24
+	ADD  R23,R0
+	MUL  R30,R25
+	ADD  R23,R0
+	MUL  R22,R26
+	MOV  R22,R0
+	ADD  R23,R1
+	MUL  R31,R27
+	ADD  R22,R0
+	ADC  R23,R1
+	MUL  R30,R24
+	ADD  R22,R0
+	ADC  R23,R1
+	CLR  R24
+	MUL  R31,R26
+	MOV  R31,R0
+	ADD  R22,R1
+	ADC  R23,R24
+	MUL  R30,R27
+	ADD  R31,R0
+	ADC  R22,R1
+	ADC  R23,R24
+	MUL  R30,R26
+	MOV  R30,R0
+	ADD  R31,R1
+	ADC  R22,R24
+	ADC  R23,R24
+	RET
+
 __MULW12:
 	RCALL __CHKSIGNW
 	RCALL __MULW12U
 	BRTC __MULW121
 	RCALL __ANEGW1
 __MULW121:
+	RET
+
+__MULD12:
+	RCALL __CHKSIGND
+	RCALL __MULD12U
+	BRTC __MULD121
+	RCALL __ANEGD1
+__MULD121:
 	RET
 
 __DIVW21U:
@@ -4604,6 +5136,29 @@ __CHKSW1:
 	INC  R0
 	BST  R0,0
 __CHKSW2:
+	RET
+
+__CHKSIGND:
+	CLT
+	SBRS R23,7
+	RJMP __CHKSD1
+	RCALL __ANEGD1
+	SET
+__CHKSD1:
+	SBRS R25,7
+	RJMP __CHKSD2
+	CLR  R0
+	COM  R26
+	COM  R27
+	COM  R24
+	COM  R25
+	ADIW R26,1
+	ADC  R24,R0
+	ADC  R25,R0
+	BLD  R0,0
+	INC  R0
+	BST  R0,0
+__CHKSD2:
 	RET
 
 __GETW1P:

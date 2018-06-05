@@ -6,7 +6,7 @@ Automatic Program Generator
 http://www.hpinfotech.com
 
 Project : 2018 占쏙옙占쏙옙占쏙옙품 12占쏙옙 - S.P.A glove
-Version : 1.1.2
+Version : 2.1.0
 Date    : 2018-05-03
 Author  : JJH
 Company : Chungnam National University
@@ -314,12 +314,10 @@ void flex_tuning(void)
 // ******************************** About PWM control *******************************************************
 void check_pwm(void)
 {
-    long temp = 50;//PWM interrupt control, 50% duty
+    char temp = 50;//PWM interrupt control, 50% duty
     delay_ms(50); 
     
     INITIATE; //Timer interrupts on
-    ICR1H=0x13;
-    ICR1L=0x87;
     while(Middle_switch_off)
     {
         if(Left_switch_on)  temp++;
@@ -327,7 +325,8 @@ void check_pwm(void)
         if(temp<1) temp=1;
         if(temp>99)  temp=99;
         // TEST by LED berfore Valve delivered...
-        OCR1A = temp*50;  
+        OCR1AH = temp*50>>8;  
+        OCR1AL = temp*50;   //duty ratio클수록 세기가 약해짐(Compare Match Interrupt에서 ON)     
         
         lcd_clear();
         lcd_gotoxy(0, 0);
@@ -342,8 +341,6 @@ void check_pwm(void)
     PORTC=0x00;
     OCR1AH = 0;
     OCR1AL = 0;//0% duty
-    ICR1H=0x13;
-    ICR1L=0x87;
 }
 
 // ******************************** About PWM control *******************************************************
@@ -372,7 +369,8 @@ void PUMP_test()
         delay_ms(100);       
     }     
     OCR1BH=0x00;
-    OCR1BL=0x00; //0% duty
+    OCR1BL=0x00; //0% duty 
+    PORTB=0x00;
 }
 
 // ******************************** About Order *******************************************************
@@ -521,8 +519,8 @@ void valve_order()
             OCR3AL=800;
         }     
         delay_ms(100);
-    }                 
-    TERMINATE;    
+    }     
+    TERMINATE;                 
     Global_Sequence=0; 
     OCR1A =0x00;
     OCR1BH=0x00;
@@ -531,7 +529,85 @@ void valve_order()
     {
         E_flag[i]=0;
         F_flag[i]=0;
+    }           
+    PORTB=0x00;
+    PORTC=0x00;        
+}
+
+void pump_valve()
+{
+    unsigned char seq=0; 
+    unsigned char temp=50; 
+    
+    delay_ms(50);  
+    INITIATE;   
+    while(Middle_switch_off)
+    {
+        order(&seq);
+        Global_Sequence=seq;
+        
+        lcd_clear(); 
+        lcd_gotoxy(0, 0);lcd_putsf("Duty : ");
+        lcd_gotoxy(6, 0);sprintf(lcd_data, "%2d %", temp);
+        lcd_puts(lcd_data);
+        
+        disp(0,Global_Sequence);    
+        
+        lcd_gotoxy(5, 1); 
+        sprintf(lcd_data, "%d", E_flag[Global_Sequence]);
+        lcd_puts(lcd_data);
+        lcd_gotoxy(7, 1); 
+        sprintf(lcd_data, "%d", F_flag[Global_Sequence]);
+        lcd_puts(lcd_data);
+                
+        
+        if((E_flag[Global_Sequence]==0)&&(F_flag[Global_Sequence]==0)) 
+        {
+            OCR1AH=50*50>>8;
+            OCR1AL=50*50;
+            OCR3AH=50*50>>8;
+            OCR3AL=50*50;
+        }  
+        if((E_flag[Global_Sequence]==1)&&(F_flag[Global_Sequence]==0))
+        { 
+            OCR1AH=70*50>>8;
+            OCR1AL=70*50;
+            OCR3AH=30*50>>8;
+            OCR3AL=30*50;
+        }
+        if((E_flag[Global_Sequence]==0)&&(F_flag[Global_Sequence]==1)) 
+        {
+            OCR1AH=30*50>>8;
+            OCR1AL=30*50;
+            OCR3AH=70*50>>8;
+            OCR3AL=70*50;
+        }         
+        
+        if(Left_switch_on)  temp++;
+        if(Right_switch_on)  temp--;
+        if(temp<1) temp=1;
+        if(temp>99)  temp=99;
+        // TEST by LED berfore Valve delivered...
+        OCR1BH = temp*50 >>8; 
+        OCR1BL = temp*50; 
+        
+        delay_ms(500);
+    }    
+    TERMINATE;                 
+    Global_Sequence=0; 
+    OCR1AH=0x00;
+    OCR1AL=0x00;
+    OCR1BH=0x00; 
+    OCR1BL=0x00;
+    OCR1BH=0x00;
+    OCR1BL=0x00;
+    for(i=0;i<4;i++)
+    {
+        E_flag[i]=0;
+        F_flag[i]=0;
     }         
+    PORTB=0x00;
+    PORTC=0x00;
 }
 
 //**************************************%%%&&&&&&&&&&&&&&&&&&&&&&&%%%********************************************
@@ -557,13 +633,13 @@ void measure_threshold()
         lcd_gotoxy(0, 0);
         lcd_putsf("FLEX");
         lcd_gotoxy(5, 0);
-        sprintf(lcd_data, "%d %", pressure_mean[seq]);
+        sprintf(lcd_data, "%d %", flex_mean[seq]);
         lcd_puts(lcd_data); 
         
         lcd_gotoxy(0, 1);
         lcd_putsf("PRES");
         lcd_gotoxy(5, 1);
-        sprintf(lcd_data, "%d %", flex_mean[seq]);
+        sprintf(lcd_data, "%d %", pressure_mean[seq]);
         lcd_puts(lcd_data);  
         
         delay_ms(100);       
@@ -585,7 +661,7 @@ void Move_finger(unsigned char seq, unsigned char P, unsigned char Bend)
   double error=0;
 
   /***INSERT TERM OF 'threshold' IN TERMS OF 'Bend'!!!***/
-  //threshold = ;
+  threshold = 70;//일단모르니까 상수로 둠
   // Grab or not?
   if(P>=threshold)  Grab=1;//Over the threshold : no more grab
   else Grab=0;//Under the threshold : Keep moving
@@ -621,7 +697,7 @@ void Move_finger(unsigned char seq, unsigned char P, unsigned char Bend)
      
   /*신버전...
   기준 속도를 PID로 구한 후 
-  1. Grab 판정이 나지 않은 경우 Felxtion이면 inlet을 높은 비율로 outlet울 낮은 비율로 할당
+  1. Grab 판정이 나지 않은 경우 Flextion이면 inlet을 높은 비율로 outlet울 낮은 비율로 할당
   2. Grab 판정이 나지 않은 경우 Extension이면 inlet을 낮은 비율로 outlet울 높은 비율로 할당
   3. Grab 판정이 난 경우 Flextion이면 inlet/outlet 모두 기준속도사용 
   4. Grab 판정이 난 경우 Extension이면 inlet을 낮은 비율로 outlet울 높은 비율로 할당  
@@ -650,10 +726,9 @@ void RUN_daily()
   float ANG[4]={0};
 
   delay_ms(100);
+  INITIATE; //Initialization, Turn interrupts on
   while(Middle_switch_on)
   {
-    INITIATE; //Initialization, Turn interrupts on
-
     order(&seq); //Control signal of each sequence
     Global_Sequence = seq;
 
@@ -662,19 +737,56 @@ void RUN_daily()
     ANG[seq] = (flex_max[seq]-flex_mean[seq])/(flex_max[seq]-flex_min[seq])*90.;//Angle : 0~90degrees, 굽어진 각도가 클수록 센서값이 작아짐
 
     Move_finger(seq,pressure_mean[seq], ANG[seq]);
-    mean_flex(seq,1);
     ang_old[seq]=ANG[seq];
     delay_ms(Ts);//sequence gab,100times PWM pulse per each sequence
-  }
-  TERMINATE; // Turn interrupts off  
+  } 
   for(i=0;i<4;i++)
   {
     E_flag[i]=0;
     F_flag[i]=0;
   }
-  
-  Global_Sequence=0;
+  Global_Sequence=0; 
+  OCR1AH=0x00;
+  OCR1AL=0x00;
+  OCR1BH=0x00; 
+  OCR1BL=0x00;
+  OCR1BH=0x00;
+  OCR1BL=0x00;  
+  PORTC=0x00;
+  TERMINATE; // Turn interrupts off 
 }
+
+// About Rhabilitation
+void Rehab()
+{    
+    unsigned char seq=0;
+    
+    delay_ms(100);      
+    INITIATE; //Initialization, Turn interrupts on
+    while(Middle_switch_on)
+    {
+        order(&seq); //Control signal of each sequence
+        Global_Sequence = seq;
+
+        mean_flex(seq,1);
+        ANG[seq] = (flex_max[seq]-flex_mean[seq])/(flex_max[seq]-flex_min[seq])*90.;//Angle : 0~90degrees, 굽어진 각도가 클수록 센서값이 작아짐        
+        
+        /* 
+        ...
+        */
+        
+        delay_ms(Ts);//sequence gab,100times PWM pulse per each sequence
+    }
+    Global_Sequence=0; 
+    OCR1AH=0x00;
+    OCR1AL=0x00;
+    OCR1BH=0x00; 
+    OCR1BL=0x00;
+    OCR1BH=0x00;
+    OCR1BL=0x00;  
+    PORTC=0x00;
+    TERMINATE; // Turn interrupts off   
+} 
 
 // ********************************************* main ******************************************************************
 void main(void)
@@ -682,7 +794,7 @@ void main(void)
 // Declare your local variables here
 // menu
 unsigned char menu = 0;
-unsigned char menu_Max = 8;
+unsigned char menu_Max = 9;
 
 // PA1~7 : Control switch (PA0안됨)
 PORTA=0x00;
@@ -752,7 +864,7 @@ ETIMSK = 0x00;
 //ADC setting
 ADMUX=0x21;
 ADCSRA=0xCF;  //ADC enable, ADC start, ADC interrupt on, prescale:128(62.5kHz)
-//SFIOR=0x01;
+SFIOR=0x01;
 
 lcd_init(8);
 // Global enable interrupts
@@ -773,7 +885,7 @@ while (1)
                     lcd_gotoxy(0, 0);
                     lcd_putsf("1.Pressure TEST");
                     if(Middle_switch_on) pressure_test();
-                    delay_ms(150);
+                    delay_ms(100);
                     break;
 
             case 1:
@@ -781,7 +893,7 @@ while (1)
                     lcd_gotoxy(0, 0);
                     lcd_putsf("2.Pressure Tunning");
                     if(Middle_switch_on)    pressure_tuning();
-                    delay_ms(150);
+                    delay_ms(100);
                     break;
 
             case 2:
@@ -789,14 +901,14 @@ while (1)
                     lcd_gotoxy(0, 0);
                     lcd_putsf("3.Flex TEST");
                     if(Middle_switch_on)    flex_test();
-                    delay_ms(150);
+                    delay_ms(100);
                     break;
             case 3:
                     lcd_clear();
                     lcd_gotoxy(0, 0);
                     lcd_putsf("4.Flex Tunning");
                     if(Middle_switch_on)    flex_tuning();
-                    delay_ms(150);
+                    delay_ms(100);
                     break;
 
             case 4:
@@ -804,7 +916,7 @@ while (1)
                     lcd_gotoxy(0, 0);
                     lcd_putsf("5.PWM TEST");
                     if(Middle_switch_on)    check_pwm();
-                    delay_ms(150);
+                    delay_ms(100);
                     break;
 
             case 5:
@@ -812,7 +924,7 @@ while (1)
                     lcd_gotoxy(0, 0);
                     lcd_putsf("6.PUMP TEST");
                     if(Middle_switch_on)    PUMP_test();
-                    delay_ms(150);
+                    delay_ms(100);
                     break;
 
             case 6:
@@ -820,7 +932,7 @@ while (1)
                     lcd_gotoxy(0, 0);
                     lcd_putsf("7.Order TEST");
                     if(Middle_switch_on)    test_order();
-                    delay_ms(150);
+                    delay_ms(100);
                     break;
                      
             case 7:
@@ -828,22 +940,30 @@ while (1)
                     lcd_gotoxy(0, 0);
                     lcd_putsf("8.Valve Order");
                     if(Middle_switch_on)    valve_order();
-                    delay_ms(150);
+                    delay_ms(100);
                     break;
                     
             case 8:
                     lcd_clear();
                     lcd_gotoxy(0, 0);
-                    lcd_putsf("9.Threshold?);
+                    lcd_putsf("9.Threshold?");
                     if(Middle_switch_on)    measure_threshold();
-                    delay_ms(150);
+                    delay_ms(100);
                     break;
-
+            
+            case 9:
+                    lcd_clear();
+                    lcd_gotoxy(0, 0);
+                    lcd_putsf("10.PUMP VALVE");
+                    if(Middle_switch_on)    pump_valve();
+                    delay_ms(100);
+                    break;
+            
              default :
                     lcd_clear();
                     lcd_gotoxy(0, 0);
                     lcd_putsf("**BREAK!**");
-                    delay_ms(150);
+                    delay_ms(100);
                     break;
 
          }
