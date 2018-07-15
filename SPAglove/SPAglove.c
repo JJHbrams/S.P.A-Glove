@@ -21,22 +21,26 @@ AVR Core Clock frequency: 16.000000 MHz
 #include <delay.h>
 #include <stdio.h>
 
-// Alphanumeric LCD Module functions
+/* Alphanumeric LCD Module functions */
 #include <lcd.h>
 #asm
  .equ __lcd_port = 0x12 //PORTD 8
 #endasm
-// About ADC
+
+/* About ADC */
 #define ADC_VREF_TYPE 0x60
 #define NUM_SAMP  50  //MUST be Under 255
-//About Switch
-#define Left_switch_on    (!PINE.3)
+
+/*About Switch*/
+#define Left_switch_on    (!PINE.1)
 #define Middle_switch_on  (!PINE.2)
-#define Right_switch_on   (!PINE.1)
-#define Left_switch_off   (PINE.3)
+#define Right_switch_on   (!PINE.3)
+#define Left_switch_off   (PINE.1)
 #define Middle_switch_off (PINE.2)
-#define Right_switch_off  (PINE.1)
-//About order
+#define Right_switch_off  (PINE.3)
+
+/*About order*/
+// Actual signal
 #define Up_thumb          (!PINE.5)
 #define Down_thumb        (!PINA.1)
 #define Up_index          (!PINA.2)
@@ -45,7 +49,7 @@ AVR Core Clock frequency: 16.000000 MHz
 #define Down_middle       (!PINA.5)
 #define Up_rest           (!PINA.6)
 #define Down_rest         (!PINA.7)
-
+// No signal
 #define NO_SIGNAL_tu      (PINE.5)
 #define NO_SIGNAL_td      (PINA.1)
 #define NO_SIGNAL_iu      (PINA.2)
@@ -55,16 +59,33 @@ AVR Core Clock frequency: 16.000000 MHz
 #define NO_SIGNAL_ru      (PINA.6)
 #define NO_SIGNAL_rd      (PINA.7)
 
-//About u saturation
-#define UPPER   3790
-#define LOWER   1250
-//About RUN
+/*About u saturation*/
+#define UPPER   3500 //90%  duty
+#define LOWER   800 //10% duty
+
+/*About RUN*/
 #define NORMAL_SPEED  500 //Only relates to reaction speed...
+#define ANG_th 1
+#define MAX_ANG 60
+//Timer on/off
 #define INITIATE  TIMSK = 0x14, ETIMSK = 0x14   //TIM1_COMPA interrupt on, TIM1_OVF interrupt on (Inlet Valve control)
                                                 //TIM3_COMPA interrupt on, TIM3_OVF interrupt on (Outlet Valve control)
 
 #define TERMINATE TIMSK = 0x00, ETIMSK = 0x00   //TIM1_COMPA interrupt off, TIM1_OVF interrupt off (Inlet Valve control)
-                                                //TIM3_COMPA interrupt off, TIM3_OVF interrupt off (Outlet Valve control)
+                                                //TIM3_COMPA interrupt off, TIM3_OVF interrupt off (Outlet Valve control)                                                     
+/* Rehabilitation */
+//Flextion or Extension
+#define FLEX   1
+#define EXTD   0
+//Finger type 
+#define THUMB  0
+#define INDEX  1
+#define MIDDLE 2
+#define REST   3 
+// Flextion/Extension speed
+// Top : 4999에 대한 duty ratio = (duty)*(4999/100) => (duty)*50
+#define REHAB_SPEED 3000
+                                                
 //*****************************************************************************************************************
 // ****** Declare your global variables here  ******
 unsigned char sam_num = 0; // counting variable for ADC interrupt
@@ -90,48 +111,54 @@ unsigned int  flex_sum[4] = {0};
 unsigned char flex_mean[4] = {0};
 
 //tuning
-unsigned char flex_max[4] = {0};
+//unsigned char flex_max[4] = {90, 130, 105, 135};
+//unsigned char flex_min[4] = {65, 100, 79, 107};
+unsigned char flex_max[4] = {0, 0, 0, 0};
 unsigned char flex_min[4] = {255, 255, 255, 255};
-unsigned char pressure_max[4] = {0};
-unsigned char pressure_min[4] = {255, 255, 255, 255};
+unsigned char pressure_max[4] = {80, 82, 75, 65};
+unsigned char pressure_min[4] = {0};
 
 // Moving
 unsigned char E_flag[4]={0}; //EXTENSION : 1
 unsigned char F_flag[4]={0}; //FLEXTION : 1
 unsigned char Global_Sequence=0;
+int arrived[4] = {0};    // 아직 목표값에 도달하지 못한 경우(목표값보다 큼) : -1
+                    // 목표값에도달한 경우 : 0
+                    // 아직 목표값에 도달하지 못한 경우(목표값보다 작음) : 1
 
 // PID
-double kp=0.0001;
-double ki=0.0000;
-double kd=0.0000;
+float kp=70.0000;
+float ki=30.0000;
+float kd=20.0000;
 double error_old[4]={0};
 double error_sum[4]={0};
-unsigned char ang_desired=0;
 unsigned char ang_old[4]={0};//Initial angle : 0 degrees
-unsigned char delta_ang=10;//10 degrees per each sequence(EXPERIMENT NEED!)
+unsigned const char delta_ang=2;//5 degrees per each sequence(EXPERIMENT NEED!)
 unsigned const char Ts=60; //Control sequence term in [ms]
 //*****************************************************************************************************************
 // Timer 1 Controls INLET!!
 // Timer1 output compare A interrupt service routine
 interrupt [TIM1_COMPA] void timer1_compa_isr(void)
-{
-  PORTC |= 0x01<<Global_Sequence;//INLET Valve on
+{  
+    if(arrived[Global_Sequence] == 1)   PORTC |= 0x01<<Global_Sequence;//INLET Valve on  
+    else                                PORTC &= 0x00;
 }
 // Timer1 overflow A interrupt service routine
 interrupt [TIM1_OVF] void timer1_ovf_isr(void)
 {
-  PORTC=0x00;//INLET Valve off
+    PORTC=0x00;//INLET Valve off
 }
 // Timer 3 Controls OUTLET!!
 // Timer3 comparematch A interrupt service routine
 interrupt [TIM3_COMPA] void timer3_compa_isr(void)
 {
-  PORTC |= 0x10<<Global_Sequence;//OUTLET Valve on
+    if(arrived[Global_Sequence] == -1)  PORTC |= 0x10<<Global_Sequence;//OUTLET Valve on  
+    else                                PORTC &= 0x00;
 }
 // Timer1 output compare A interrupt service routine
 interrupt [TIM3_OVF] void timer3_ovf_isr(void)
 {
-  PORTC=0x00;//OUTLET Valve off
+    PORTC=0x00;//OUTLET Valve off
 }
 // ********************************* ADC interrupt service routine ************************************************
 interrupt [ADC_INT] void adc_isr(void)
@@ -163,7 +190,9 @@ void mean_pressure(unsigned char sequence, unsigned char tunned)
         pressure_sum[sequence] += pressure_data[sequence][num];
     pressure_mean[sequence] = pressure_sum[sequence]/NUM_SAMP;
     pressure_sum[sequence] = 0;
-    d_flag=0;   
+    d_flag=0; 
+    
+    if(pressure_mean[sequence]>190)  pressure_mean[sequence]=0;  
     
     if(tunned)
     {
@@ -183,8 +212,8 @@ void pressure_test(void)
         lcd_gotoxy(0, 0);
         lcd_putsf("Testing");
 
-        if(Left_switch_on)  num++;
-        if(Right_switch_on) num--;
+        if(Left_switch_on)  num--;
+        if(Right_switch_on) num++;
         if(num>3) num=3;    
         mean_pressure((unsigned char)num,0);
 
@@ -211,8 +240,8 @@ void pressure_tuning(void)
         lcd_gotoxy(0, 0);
         lcd_putsf("Tunning");
 
-        if(Left_switch_on)  num++;
-        if(Right_switch_on) num--;
+        if(Left_switch_on)  num--;
+        if(Right_switch_on) num++;
         if(num>3) num=3;            
         
         mean_pressure((unsigned char)num,0);  
@@ -261,8 +290,8 @@ void flex_test(void)
         lcd_gotoxy(0, 0);
         lcd_putsf("Testing");
 
-        if(Left_switch_on)  num++;
-        if(Right_switch_on) num--;
+        if(Left_switch_on)  num--;
+        if(Right_switch_on) num++;
         if(num>3) num=3;
         mean_flex((unsigned char)num,0);
 
@@ -289,8 +318,8 @@ void flex_tuning(void)
         lcd_gotoxy(0, 0);
         lcd_putsf("Tunning");
 
-        if(Left_switch_on)  num++;
-        if(Right_switch_on) num--;
+        if(Left_switch_on)  num--;
+        if(Right_switch_on) num++;
         if(num>3) num=3;
         mean_flex((unsigned char)num,0);
 
@@ -320,8 +349,8 @@ void check_pwm(void)
     INITIATE; //Timer interrupts on
     while(Middle_switch_off)
     {
-        if(Left_switch_on)  temp++;
-        if(Right_switch_on)  temp--;
+        if(Left_switch_on)  temp--;
+        if(Right_switch_on)  temp++;
         if(temp<1) temp=1;
         if(temp>99)  temp=99;
         // TEST by LED berfore Valve delivered...
@@ -351,8 +380,8 @@ void PUMP_test()
 
     while(Middle_switch_off)
     {
-        if(Left_switch_on)  temp++;
-        if(Right_switch_on)  temp--;
+        if(Left_switch_on)  temp--;
+        if(Right_switch_on)  temp++;
         if(temp<1) temp=1;
         if(temp>99)  temp=99;
         // TEST by LED berfore Valve delivered...
@@ -466,8 +495,7 @@ void test_order()
 void valve_order()
 {
     unsigned char seq=0; 
-    unsigned char temp=0; 
-    
+        
     delay_ms(50);  
     INITIATE;   
     while(Middle_switch_off)
@@ -478,8 +506,8 @@ void valve_order()
         lcd_clear(); 
         lcd_gotoxy(0, 0);lcd_putsf("Valve!");   
         
-        if(Left_switch_on)  Global_Sequence++;
-        if(Right_switch_on)  Global_Sequence--;
+        if(Left_switch_on)  Global_Sequence--;
+        if(Right_switch_on)  Global_Sequence++;
         if(Global_Sequence>3)   Global_Sequence=0;
         if(Global_Sequence==0 && Right_switch_on)   Global_Sequence=3;   
         
@@ -523,8 +551,8 @@ void valve_order()
     TERMINATE;                 
     Global_Sequence=0; 
     OCR1A =0x00;
-    OCR1BH=0x00;
-    OCR1BL=0x00;
+    OCR3BH=0x00;
+    OCR3BL=0x00;
     for(i=0;i<4;i++)
     {
         E_flag[i]=0;
@@ -583,15 +611,15 @@ void pump_valve()
             OCR3AL=70*50;
         }         
         
-        if(Left_switch_on)  temp++;
-        if(Right_switch_on)  temp--;
+        if(Left_switch_on)  temp--;
+        if(Right_switch_on)  temp++;
         if(temp<1) temp=1;
         if(temp>99)  temp=99;
         // TEST by LED berfore Valve delivered...
         OCR1BH = temp*50 >>8; 
         OCR1BL = temp*50; 
         
-        delay_ms(500);
+        delay_ms(Ts);
     }    
     TERMINATE;                 
     Global_Sequence=0; 
@@ -620,20 +648,24 @@ void measure_threshold()
     delay_ms(50);
 
     while(Middle_switch_off)
-    {
-        if(Left_switch_on)  seq++;
-        if(Right_switch_on)  seq--;
+    {   
+        float ANG[4]={0}; 
+        
+        if(Left_switch_on)  seq--;
+        if(Right_switch_on)  seq++;
         if(seq>3)  seq=0;
         if(seq==0 && Right_switch_on)  seq=3;
         
         mean_flex(seq,1);
-        mean_pressure(seq,1);                                      
+        mean_pressure(seq,1);  
+        
+        ANG[seq] = (float)(flex_max[seq]-flex_mean[seq])/((float)(flex_max[seq]-flex_min[seq]))*MAX_ANG;                                    
         
         lcd_clear();
         lcd_gotoxy(0, 0);
         lcd_putsf("FLEX");
         lcd_gotoxy(5, 0);
-        sprintf(lcd_data, "%d %", flex_mean[seq]);
+        sprintf(lcd_data, "%d", (int)ANG[seq]);
         lcd_puts(lcd_data); 
         
         lcd_gotoxy(0, 1);
@@ -647,146 +679,684 @@ void measure_threshold()
 }
 
 // Moving fingers
-void Move_finger(unsigned char seq, unsigned char P, unsigned char Bend)
+void Move_finger(unsigned char seq, unsigned char P, float Bend)
 {
-  unsigned char threshold;//Actively changing by Bend
-  unsigned char Grab=0;//if 1, no more Grab (NO FLEXTION)
-  unsigned char E_OR_F;
-  unsigned int OCR_in;
-  unsigned int OCR_out;
-  //double r=0;//r=OCR_out/OCR_in
-  double r_in=1;//inlet speed ratio
-  double r_out=1;//outlet speed ratio
-  double u=0;
-  double error=0;
+    unsigned char threshold;  //Actively changing by Bend
+    unsigned char Grab=0;     //if 1, no more Grab (NO FLEXTION) 
+    int ang_desired=0;
+    int E_OR_F;     
+    float u=0;
+    float error=0;    
 
-  /***INSERT TERM OF 'threshold' IN TERMS OF 'Bend'!!!***/
-  threshold = 70;//일단모르니까 상수로 둠
-  // Grab or not?
-  if(P>=threshold)  Grab=1;//Over the threshold : no more grab
-  else Grab=0;//Under the threshold : Keep moving
-
-
-  //Update angle (PID)
-  E_OR_F = ((E_flag[seq]?-1:1)+(F_flag[seq]?1:-1))/2;//Extension:1, Flextion:-1, Do noting:0
-  ang_desired = Bend+E_OR_F*delta_ang;//Ext:Bend+delta_ang, Flex:Bend-delta_ang, Stay:Bend
-  error = ang_desired-ang_old[seq];
-  error_sum[seq] += error;
-  u = kp*error + ki*error_sum[seq]*(Ts/1000.) + kd*(error-error_old[seq])/(Ts/1000.);//Control value for OCR1A,OCR3A
-  error_old[seq]=error;
-
-  //Saturation condition...
-  if(u>UPPER)       u=UPPER;
-  else if(u<LOWER)  u=LOWER;
-
-
-  // Input update       
-  /*구버전... (Input-Output ratio calcultate)
-  //Grab&Flextion:r=1, !Grab&Flextion:r=1.4, !Grab&E_flag:r=0.6, !Grab&stay:r=1, Grab&!F_flag:Extension(r=0.6) or stay(r=1)
-  r = (Grab&&F_flag[seq])?1:(((E_flag[seq]?0.2:1)+(F_flag[seq]?1.8:1))/2);  
+    /*** INSERT TERM OF 'threshold' IN TERMS OF 'Bend'!!! ***/
+    threshold = 100; 
+    // Grab or not?
+    /*
+    if(P>=threshold)  Grab=1;//Over the threshold : no more grab
+    else Grab=0;//Under the threshold : Keep moving  
+    */
   
+    //Update angle (PID)
+    E_OR_F = (Grab&&F_flag[seq])?0:(((E_flag[seq]?-1:1)+(F_flag[seq]?1:-1))/2);//Extension:-1, Flextion:1, Do noting:0
+    ang_desired = Bend+(E_OR_F*delta_ang);//Ext:Bend-delta_ang, Flex:Bend+delta_ang, Stay:Bend 
+    //if(ang_desired<0)   ang_desired = 0;
+    error = ang_desired-ang_old[seq];     //error : 0~60
+    error_sum[seq] += error;
+    u = kp*error + ki*error_sum[seq]*((float)(Ts/1000.)) + kd*(error-error_old[seq])/((float)(Ts/1000.));//Control value for OCR1A,OCR3A
+    error_old[seq]=error;
+
+    //Saturation condition...
+    if(u>UPPER)       u=UPPER;
+    else if(u<LOWER)  u=LOWER; 
+             
   
-  //without PID
-  OCR_in = IN_SPEED;  //Inlet
-  OCR_out = r*OCR_in; //Outlet
-  
-  //with PID
-  OCR_in = u;           //Inlet
-  OCR_out = r*OCR_in;   //Outlet     
-  */    
-     
-  /*신버전...
-  기준 속도를 PID로 구한 후 
-  1. Grab 판정이 나지 않은 경우 Flextion이면 inlet을 높은 비율로 outlet울 낮은 비율로 할당
-  2. Grab 판정이 나지 않은 경우 Extension이면 inlet을 낮은 비율로 outlet울 높은 비율로 할당
-  3. Grab 판정이 난 경우 Flextion이면 inlet/outlet 모두 기준속도사용 
-  4. Grab 판정이 난 경우 Extension이면 inlet을 낮은 비율로 outlet울 높은 비율로 할당  
-  5. 아무런 입력이 없는 경우 동적평형상태를 유지
-  */                 
-  //Grab&Flextion:r=1, !Grab&Flextion:r=1.4, !Grab&E_flag:r=0.6, !Grab&stay:r=1, Grab&!F_flag:Extension(r=0.6) or stay(r=1)
-  r_in = (Grab&&F_flag[seq])?1:(((E_flag[seq]?0.2:1)+(F_flag[seq]?1.8:1))/2);   
-  //Grab&Flextion:r=1, !Grab&Flextion:r=0.6, !Grab&E_flag:r=1.4, !Grab&stay:r=1, Grab&!F_flag:Extension(r=1.4) or stay(r=1)     
-  r_out = (Grab&&F_flag[seq])?1:(((E_flag[seq]?1.8:1)+(F_flag[seq]?0.2:1))/2);      
-  
-  //with PID
-  OCR_in = r_in*u;          //Inlet
-  OCR_out = r_out*u;        //Outlet 
-  
-  //Define action
-  OCR1AH = OCR_in>>8;
-  OCR1AL = OCR_in;
-  OCR3AH = OCR_out>>8;
-  OCR3AL = OCR_out;
+    //Extension
+    if(Bend>(ang_desired+ANG_th)) 
+    { 
+        arrived[seq] = -1;
+        OCR3AH=(int)u>>8;   
+        OCR3AL=u;
+    }
+    //Flextion
+    else if(Bend<(ang_desired-ANG_th))
+    { 
+        arrived[seq] = 1;
+        OCR1AH=(int)u>>8;   
+        OCR1AL=u;
+    }
+    //Hold 
+    else if((Bend>=(ang_desired-ANG_th)) && (Bend<=(ang_desired+ANG_th)))    
+    { 
+        //OCR3AH=(int)u>>8;
+        //OCR3AL=u; 
+        arrived[seq] = 0;             
+    }  
 }
 
 // About Daily mode
 void RUN_daily()
 {
-  unsigned char seq=0;
-  float ANG[4]={0};
-
-  delay_ms(100);
+  unsigned char seq=0; 
+  int finger=1;
+  float ANG[4]={0};  
+  
+  lcd_clear(); 
+  lcd_gotoxy(0, 0);lcd_putsf("Daily");
+  delay_ms(100); 
+  
+  OCR1BH=(99*50)>>8;
+  OCR1BL=99*50;  
+  
   INITIATE; //Initialization, Turn interrupts on
-  while(Middle_switch_on)
+  while(Middle_switch_off)
   {
     order(&seq); //Control signal of each sequence
     Global_Sequence = seq;
-
+    
+    for(i=0;i<4;i++)    disp(i*2,i);   
+        
     mean_pressure(seq,1);
     mean_flex(seq,1);
-    ANG[seq] = (flex_max[seq]-flex_mean[seq])/(flex_max[seq]-flex_min[seq])*90.;//Angle : 0~90degrees, 굽어진 각도가 클수록 센서값이 작아짐
+    ANG[seq] = (float)(flex_max[seq]-flex_mean[seq])/((float)(flex_max[seq]-flex_min[seq]))*MAX_ANG;
 
-    Move_finger(seq,pressure_mean[seq], ANG[seq]);
+    Move_finger(seq,pressure_mean[seq], ANG[seq]); 
+                                             
+    if(Left_switch_on)  finger--;
+    if(Right_switch_on)  finger++;
+    if(finger<0) finger=0;
+    if(finger>3)  finger=3;
+    lcd_gotoxy(6, 0);sprintf(lcd_data, "%d %", arrived[finger]);lcd_puts(lcd_data);
+    
     ang_old[seq]=ANG[seq];
-    delay_ms(Ts);//sequence gab,100times PWM pulse per each sequence
-  } 
+    delay_ms(200);//sequence gab
+  }          
+  TERMINATE; // Turn interrupts off
+  PORTC=0x00; 
   for(i=0;i<4;i++)
   {
     E_flag[i]=0;
-    F_flag[i]=0;
+    F_flag[i]=0; 
+    arrived[i]=0;
   }
   Global_Sequence=0; 
   OCR1AH=0x00;
   OCR1AL=0x00;
-  OCR1BH=0x00; 
-  OCR1BL=0x00;
+  OCR3AH=0x00; 
+  OCR3AL=0x00;
   OCR1BH=0x00;
   OCR1BL=0x00;  
-  PORTC=0x00;
-  TERMINATE; // Turn interrupts off 
+}
+
+void rehab_move(unsigned char finger, unsigned char mod, unsigned char ANG_d)
+{
+    // mod : 접는지 펴는지 지시, Bend : 현재 손가락 각도 
+    //(mod = 1:접음, 0:폄)    (Bend=In degrees, 0~90)
+    float Bend=-1;
+    
+    Global_Sequence=finger;  
+    
+    while(1)
+    {
+        mean_flex(finger,1);
+        Bend = (float)(flex_max[finger]-flex_mean[finger])/((float)(flex_max[finger]-flex_min[finger]))*MAX_ANG;
+       
+        if((mod==1)&&(Bend<ANG_d)) 
+        {
+            //Define action    
+            arrived[finger] = 1;
+            
+        }  
+        else if((mod!=1)&&(Bend>ANG_d)) 
+        {
+            //Define action 
+            arrived[finger] = -1;
+            
+        }   
+        else    break;
+        
+        if(Middle_switch_on)   return;  
+    }  
+    arrived[finger] = 0;
+    delay_ms(1000);    
 }
 
 // About Rhabilitation
-void Rehab()
-{    
-    unsigned char seq=0;
+void RUN_rehab()
+{         
+    lcd_clear(); 
+    lcd_gotoxy(0, 0);lcd_putsf("Rehabilitation");
+     
+    delay_ms(100); 
     
-    delay_ms(100);      
+    OCR1BH=(99*50)>>8;
+    OCR1BL=99*50;     
+    
+    OCR1AH = 800>>8;
+    OCR1AL = 800;     //Many Inlet 
+    OCR3AH = REHAB_SPEED>>8;
+    OCR3AL = REHAB_SPEED;     //Many Outlet
+         
     INITIATE; //Initialization, Turn interrupts on
-    while(Middle_switch_on)
-    {
-        order(&seq); //Control signal of each sequence
-        Global_Sequence = seq;
-
-        mean_flex(seq,1);
-        ANG[seq] = (flex_max[seq]-flex_mean[seq])/(flex_max[seq]-flex_min[seq])*90.;//Angle : 0~90degrees, 굽어진 각도가 클수록 센서값이 작아짐        
+    //mode1 (하나씩 접었다 폄)
+    rehab_move(THUMB,FLEX,40);   
+    rehab_move(THUMB,EXTD,10); 
+    rehab_move(INDEX,FLEX,60);   
+    rehab_move(INDEX,EXTD,10);
+    rehab_move(MIDDLE,FLEX,40);   
+    rehab_move(MIDDLE,EXTD,10);
+    rehab_move(REST,FLEX,60);
+    rehab_move(REST,EXTD,10); 
+    PORTC=0x00; 
         
-        /* 
-        ...
-        */
+    delay_ms(1000); 
         
-        delay_ms(Ts);//sequence gab,100times PWM pulse per each sequence
-    }
-    Global_Sequence=0; 
+    //mode2 (하나씩 접고 하나씩 폄)
+    rehab_move(THUMB,FLEX,40);
+    rehab_move(INDEX,FLEX,50);
+    rehab_move(MIDDLE,FLEX,40); 
+    rehab_move(REST,FLEX,60);       
+    rehab_move(REST,EXTD,10);         
+    rehab_move(MIDDLE,EXTD,10);    
+    rehab_move(INDEX,EXTD,10);
+    rehab_move(THUMB,EXTD,10); 
+    PORTC=0x00;                 
+        
+    delay_ms(1000);
+                
+    //mode3 (하나씩 엄지랑 맞붙였다 뗌) 
+    rehab_move(THUMB,FLEX,25);
+    rehab_move(INDEX,FLEX,45); 
+    rehab_move(INDEX,EXTD,10);
+    rehab_move(THUMB,EXTD,10);        
+    rehab_move(THUMB,FLEX,30);
+    rehab_move(MIDDLE,FLEX,35); 
+    rehab_move(MIDDLE,EXTD,10);  
+    rehab_move(THUMB,EXTD,10);       
+    rehab_move(THUMB,FLEX,55);
+    rehab_move(REST,FLEX,40);
+    rehab_move(REST,EXTD,10); 
+    rehab_move(THUMB,EXTD,10);  
+    PORTC=0x00;    
+    TERMINATE; // Turn interrupts off  
+    Global_Sequence=0;   
+    PORTC=0x00;
+    PORTB=0x00;
     OCR1AH=0x00;
     OCR1AL=0x00;
-    OCR1BH=0x00; 
-    OCR1BL=0x00;
+    OCR3AH=0x00; 
+    OCR3AL=0x00;
     OCR1BH=0x00;
-    OCR1BL=0x00;  
-    PORTC=0x00;
-    TERMINATE; // Turn interrupts off   
+    OCR1BL=0x00;   
 } 
+
+//
+void test()
+{
+    unsigned char seq=0;  
+    int temp = 3000;
+        
+    delay_ms(50);  
+    INITIATE;  
+    
+    //ICR1H=0x4F;
+    //ICR1L=0xFF;
+    //ICR3H=0x4F;
+    //ICR3L=0xFF; 
+    
+    OCR1BH=(50*50)>>8;
+    OCR1BL=50*50;     
+    
+    lcd_clear(); 
+    lcd_gotoxy(0, 0);lcd_putsf("Valve!");
+    
+    while(Middle_switch_off)
+    {                
+        order(&seq); //Control signal of each sequence
+        Global_Sequence = seq;   
+        
+        OCR1AH=800>>8;   
+        OCR1AL=800;  
+        OCR3AH=3000>>8;
+        OCR3AL=3000;
+        
+        lcd_gotoxy(0, 1);lcd_putsf("Inlet!");   
+        arrived[seq]=1;
+        
+        /*
+        if(Left_switch_on)  temp-=10;
+        if(Right_switch_on)  temp+=10;
+        if(temp<0) temp=0;
+        if(temp>3500)  temp=3500;    
+        
+        lcd_gotoxy(0, 1);
+        sprintf(lcd_data, "%d %", temp);
+        lcd_puts(lcd_data); 
+        */
+        
+        if(Left_switch_on)
+        {
+            lcd_gotoxy(0, 1);lcd_putsf("Inlet!");   
+            arrived[seq]=1;
+            
+        }      
+        
+        if(Right_switch_on)
+        {
+            lcd_gotoxy(0, 1);lcd_putsf("Outlet!"); 
+            arrived[seq]=-1;
+            
+        }
+           
+                   
+        /*
+        if(Left_switch_on)
+        {
+            if((E_flag[0]==1)&&(F_flag[0]==0))
+            {
+                E_flag[0]=0;
+                F_flag[0]=0;
+            }
+            else
+            {
+                E_flag[0]=1;
+                F_flag[0]=0;
+            }
+        }
+        if(Right_switch_on)
+        {
+            if((E_flag[0]==0)&&(F_flag[0]==1))
+            {
+                E_flag[0]=0;
+                F_flag[0]=0;
+            }
+            else
+            {
+                E_flag[0]=0;
+                F_flag[0]=1;
+            }
+        }  
+        
+        disp(0,0);    
+        
+        lcd_gotoxy(5, 1); 
+        sprintf(lcd_data, "%d", E_flag[0]);
+        lcd_puts(lcd_data);
+        lcd_gotoxy(7, 1); 
+        sprintf(lcd_data, "%d", F_flag[0]);
+        lcd_puts(lcd_data);                
+        
+        if((E_flag[0]==0)&&(F_flag[0]==0)) 
+        {
+            OCR1AH=500>>8;
+            OCR1AL=500;
+            OCR3AH=500>>8;
+            OCR3AL=500;
+        }  
+        if((E_flag[0]==1)&&(F_flag[0]==0))
+        { 
+            OCR1AH=800>>8;
+            OCR1AL=800;
+            OCR3AH=200>>8;
+            OCR3AL=200;
+        }
+        if((E_flag[0]==0)&&(F_flag[0]==1)) 
+        {
+            OCR1AH=200>>8;
+            OCR1AL=200;
+            OCR3AH=800>>8;
+            OCR3AL=800;
+        }   
+        */  
+        
+        delay_ms(Ts);
+    }     
+    TERMINATE; 
+    for(i=0;i<4;i++)    arrived[i]=0;
+    ICR1H=0x13;
+    ICR1L=0x87;
+    ICR3H=0x13;
+    ICR3L=0x87;                 
+    Global_Sequence=0; 
+    OCR1AH=0x00;   
+    OCR1AL=0x00;
+    OCR3AH=0x00;
+    OCR3AL=0x00;  
+    OCR1BH=0x00;
+    OCR1BL=0x00;
+    E_flag[0]=0;
+    F_flag[0]=0;          
+    PORTB=0x00;
+    PORTC=0x00;        
+}
+
+void test2()
+{
+    unsigned char seq=0;        
+    float ANG[4]={0};
+    char ang_desired=15; 
+    int temp = 3500;  
+    float u=0;
+    float error=0;
+        
+    delay_ms(50);  
+    INITIATE;   
+    
+    OCR1BH=(99*50)>>8;
+    OCR1BL=99*50;  
+    
+    OCR1AH=temp>>8;   
+    OCR1AL=temp;    
+    
+    lcd_clear(); 
+    
+    while(Middle_switch_off)
+    {                
+        order(&seq); //Control signal of each sequence
+        Global_Sequence = seq;  
+        //Global_Sequence=0;
+        mean_flex(seq,1);
+        ANG[seq] = (float)(flex_max[seq]-flex_mean[seq])/((float)(flex_max[seq]-flex_min[seq]))*MAX_ANG;
+        
+        if(Left_switch_on)      ang_desired--;
+        if(Right_switch_on)     ang_desired++;
+        
+        if(ang_desired<0)       ang_desired=0;
+        if(ang_desired>40)      ang_desired=40;  
+        
+        error = ang_desired-ang_old[2];   //error : 0~90
+        error_sum[2] += error;
+        u = kp*error + ki*error_sum[2]*((float)(Ts/1000.)) + kd*(error-error_old[2])/((float)(Ts/1000.));//Control value for OCR1A,OCR3A  
+        //u=4999-u;
+        error_old[2]=error;  
+        ang_old[2]= ANG[2];
+        
+        //Saturation condition...
+        if(u>UPPER)       u=UPPER;
+        else if(u<LOWER)  u=LOWER;     
+                          
+        lcd_gotoxy(0, 0);
+        sprintf(lcd_data, "%2d %", ang_desired);
+        lcd_puts(lcd_data);   
+                                   
+        lcd_gotoxy(2, 0);
+        sprintf(lcd_data, "%2d %", (int)ANG[2]);
+        lcd_puts(lcd_data); 
+        
+        lcd_gotoxy(4, 0);
+        sprintf(lcd_data, "%4d %", (int)u);
+        lcd_puts(lcd_data);
+        
+        for(i=0;i<4;i++)    disp(i*2,i);  
+        
+        if(ANG[2]>(ang_desired+2))
+        {        
+            //Extension  
+            TIMSK=0x14;  
+            ETIMSK=0x14;
+            OCR3AH=(int)u>>8;
+            OCR3AL=(int)u;
+        } 
+        else if(ANG[2]<(ang_desired-2))
+        {    
+            //Flextion   
+            TIMSK=0x14; 
+            ETIMSK = 0x00;
+            OCR1AH=(int)u>>8;   
+            OCR1AL=(int)u;
+        } 
+        else if(ANG[2]>=(ang_desired-2) && ANG[2]<=(ang_desired+2))  
+        {    
+            //Hold 
+            TIMSK=0x00;   
+            ETIMSK = 0x00;
+        }         
+                   
+        /*
+        if(Left_switch_on)
+        {
+            if((E_flag[0]==1)&&(F_flag[0]==0))
+            {
+                E_flag[0]=0;
+                F_flag[0]=0;
+            }
+            else
+            {
+                E_flag[0]=1;
+                F_flag[0]=0;
+            }
+        }
+        if(Right_switch_on)
+        {
+            if((E_flag[0]==0)&&(F_flag[0]==1))
+            {
+                E_flag[0]=0;
+                F_flag[0]=0;
+            }
+            else
+            {
+                E_flag[0]=0;
+                F_flag[0]=1;
+            }
+        }  
+        
+        disp(0,0);    
+        
+        lcd_gotoxy(5, 1); 
+        sprintf(lcd_data, "%d", E_flag[0]);
+        lcd_puts(lcd_data);
+        lcd_gotoxy(7, 1); 
+        sprintf(lcd_data, "%d", F_flag[0]);
+        lcd_puts(lcd_data);                
+        
+        if((E_flag[0]==0)&&(F_flag[0]==0)) 
+        {
+            OCR1AH=500>>8;
+            OCR1AL=500;
+            OCR3AH=500>>8;
+            OCR3AL=500;
+        }  
+        if((E_flag[0]==1)&&(F_flag[0]==0))
+        { 
+            OCR1AH=800>>8;
+            OCR1AL=800;
+            OCR3AH=200>>8;
+            OCR3AL=200;
+        }
+        if((E_flag[0]==0)&&(F_flag[0]==1)) 
+        {
+            OCR1AH=200>>8;
+            OCR1AL=200;
+            OCR3AH=800>>8;
+            OCR3AL=800;
+        }   
+        */  
+        
+        delay_ms(100);  
+    }     
+    TERMINATE;
+    ICR1H=0x13;
+    ICR1L=0x87;
+    ICR3H=0x13;
+    ICR3L=0x87;                 
+    Global_Sequence=0; 
+    OCR1AH=0x00;   
+    OCR1AL=0x00;
+    OCR3AH=0x00;
+    OCR3AL=0x00;  
+    OCR1BH=0x00;
+    OCR1BL=0x00;
+    E_flag[0]=0;
+    F_flag[0]=0;          
+    PORTB=0x00;
+    PORTC=0x00;        
+}
+
+void test3()
+{
+    unsigned char seq=0;        
+    float ANG[4]={0};
+    char ang_desired=15; 
+    int temp = 3500;  
+    int E_OR_F;   
+    float u=0;
+    float error=0;
+        
+    delay_ms(50);  
+    INITIATE;   
+    
+    OCR1BH=(99*50)>>8;
+    OCR1BL=99*50;  
+    
+    OCR1AH=temp>>8;   
+    OCR1AL=temp;    
+    
+    lcd_clear(); 
+    
+    while(Middle_switch_off)
+    {                
+        order(&seq); //Control signal of each sequence
+        Global_Sequence = seq;  
+        //Global_Sequence=2;
+        mean_flex(seq,1);
+        ANG[seq] = (float)(flex_max[seq]-flex_mean[seq])/((float)(flex_max[seq]-flex_min[seq]))*MAX_ANG;
+        
+        if(Left_switch_on)      ang_desired--;
+        if(Right_switch_on)     ang_desired++;
+        
+        if(ang_desired<0)       ang_desired=0;
+        if(ang_desired>MAX_ANG)      ang_desired=MAX_ANG;  
+                                                
+        E_OR_F = ((E_flag[2]?-1:1)+(F_flag[2]?1:-1))/2;//Extension:-1, Flextion:1, Do noting:0
+        ang_desired = ANG[2]+(E_OR_F*delta_ang);//Ext:Bend-delta_ang, Flex:Bend+delta_ang, Stay:Bend
+        error = ang_desired-ang_old[2];   //error : 0~90
+        error_sum[2] += error;
+        u = kp*error + ki*error_sum[2]*((float)(Ts/1000.)) + kd*(error-error_old[2])/((float)(Ts/1000.));//Control value for OCR1A,OCR3A  
+        //u=4999-u;
+        error_old[2]=error;  
+        ang_old[2]= ANG[2];
+        
+        //Saturation condition...
+        if(u>UPPER)       u=UPPER;
+        else if(u<LOWER)  u=LOWER;     
+                          
+        lcd_gotoxy(0, 0);
+        sprintf(lcd_data, "%d %", ang_desired);
+        lcd_puts(lcd_data);   
+                                   
+        lcd_gotoxy(6, 0);
+        sprintf(lcd_data, "%d %", (int)ANG[2]);
+        lcd_puts(lcd_data); 
+        
+        lcd_gotoxy(4, 0);
+        if(E_OR_F==-1)lcd_putsf("E");
+        if(E_OR_F==0)lcd_putsf("-");
+        if(E_OR_F==1)lcd_putsf("F");     
+        
+        
+        for(i=0;i<4;i++)    disp(i*2,i);  
+        
+        if(ANG[2]>(ang_desired+ANG_th))
+        {        
+            //Extension  
+            TIMSK=0x00; 
+            ETIMSK=0x14;
+            OCR3AH=(int)u>>8;
+            OCR3AL=(int)u;
+        } 
+        else if(ANG[2]<(ang_desired-ANG_th))
+        {    
+            //Flextion   
+            TIMSK=0x14; 
+            ETIMSK = 0x00;
+            OCR1AH=(int)u>>8;   
+            OCR1AL=(int)u;
+        } 
+        else if((ANG[2]>=(ang_desired-ANG_th)) && (ANG[2]<=(ang_desired+ANG_th)))  
+        {    
+            //Hold 
+            TIMSK=0x00;   
+            ETIMSK = 0x00;
+        }         
+                   
+        /*
+        if(Left_switch_on)
+        {
+            if((E_flag[0]==1)&&(F_flag[0]==0))
+            {
+                E_flag[0]=0;
+                F_flag[0]=0;
+            }
+            else
+            {
+                E_flag[0]=1;
+                F_flag[0]=0;
+            }
+        }
+        if(Right_switch_on)
+        {
+            if((E_flag[0]==0)&&(F_flag[0]==1))
+            {
+                E_flag[0]=0;
+                F_flag[0]=0;
+            }
+            else
+            {
+                E_flag[0]=0;
+                F_flag[0]=1;
+            }
+        }  
+        
+        disp(0,0);    
+        
+        lcd_gotoxy(5, 1); 
+        sprintf(lcd_data, "%d", E_flag[0]);
+        lcd_puts(lcd_data);
+        lcd_gotoxy(7, 1); 
+        sprintf(lcd_data, "%d", F_flag[0]);
+        lcd_puts(lcd_data);                
+        
+        if((E_flag[0]==0)&&(F_flag[0]==0)) 
+        {
+            OCR1AH=500>>8;
+            OCR1AL=500;
+            OCR3AH=500>>8;
+            OCR3AL=500;
+        }  
+        if((E_flag[0]==1)&&(F_flag[0]==0))
+        { 
+            OCR1AH=800>>8;
+            OCR1AL=800;
+            OCR3AH=200>>8;
+            OCR3AL=200;
+        }
+        if((E_flag[0]==0)&&(F_flag[0]==1)) 
+        {
+            OCR1AH=200>>8;
+            OCR1AL=200;
+            OCR3AH=800>>8;
+            OCR3AL=800;
+        }   
+        */  
+        
+        delay_ms(500);  
+    }     
+    TERMINATE;
+    ICR1H=0x13;
+    ICR1L=0x87;
+    ICR3H=0x13;
+    ICR3L=0x87;                 
+    Global_Sequence=0; 
+    OCR1AH=0x00;   
+    OCR1AL=0x00;
+    OCR3AH=0x00;
+    OCR3AL=0x00;  
+    OCR1BH=0x00;
+    OCR1BL=0x00;
+    E_flag[0]=0;
+    F_flag[0]=0;          
+    PORTB=0x00;
+    PORTC=0x00;        
+}
 
 // ********************************************* main ******************************************************************
 void main(void)
@@ -794,7 +1364,7 @@ void main(void)
 // Declare your local variables here
 // menu
 unsigned char menu = 0;
-unsigned char menu_Max = 9;
+unsigned char menu_Max = 14;
 
 // PA1~7 : Control switch (PA0안됨)
 PORTA=0x00;
@@ -869,14 +1439,17 @@ SFIOR=0x01;
 lcd_init(8);
 // Global enable interrupts
 #asm("sei")
-//SREG = 0x80;
+SREG = 0x80;
 while (1)
-      {
-        if(Left_switch_on) menu++;
-        if(Right_switch_on) menu--;
-        if(menu > menu_Max)    menu = 0;
-        if(menu == 0)
-            if(Right_switch_on) menu = menu_Max;
+      {    
+        if(Left_switch_on){
+            if(menu == 0) menu = menu_Max;  
+            else    menu--;
+        }
+        
+        if(Right_switch_on) menu++;
+        if(menu > menu_Max)    menu = 0;   
+        
 
         switch(menu)
         {
@@ -956,6 +1529,46 @@ while (1)
                     lcd_gotoxy(0, 0);
                     lcd_putsf("10.PUMP VALVE");
                     if(Middle_switch_on)    pump_valve();
+                    delay_ms(100);
+                    break;
+                    
+            case 10:
+                    lcd_clear();
+                    lcd_gotoxy(0, 0);
+                    lcd_putsf("11.Daily test");
+                    if(Middle_switch_on)    RUN_daily();
+                    delay_ms(100);
+                    break;
+                    
+            case 11:
+                    lcd_clear();
+                    lcd_gotoxy(0, 0);
+                    lcd_putsf("12.Rehab test");
+                    if(Middle_switch_on)    RUN_rehab();
+                    delay_ms(100);
+                    break;       
+                    
+            case 12:
+                    lcd_clear();
+                    lcd_gotoxy(0, 0);
+                    lcd_putsf("13.TEST");
+                    if(Middle_switch_on)    test();
+                    delay_ms(100);
+                    break;    
+                    
+            case 13:
+                    lcd_clear();
+                    lcd_gotoxy(0, 0);
+                    lcd_putsf("14.TEST2");
+                    if(Middle_switch_on)    test2();
+                    delay_ms(100);
+                    break; 
+                    
+            case 14:
+                    lcd_clear();
+                    lcd_gotoxy(0, 0);
+                    lcd_putsf("15.TEST3");
+                    if(Middle_switch_on)    test3();
                     delay_ms(100);
                     break;
             

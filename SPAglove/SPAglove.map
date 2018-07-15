@@ -19,18 +19,17 @@ pressure_min                                                      0x06E1       4
 E_flag                                                            0x06E5       4
 F_flag                                                            0x06E9       4
 Global_Sequence                                                   0x06ED       1
-kp                                                                0x06EE       4
-ki                                                                0x06F2       4
-kd                                                                0x06F6       4
-error_old                                                         0x06FA      16
-error_sum                                                         0x070A      16
-ang_desired                                                       0x071A       1
-ang_old                                                           0x071B       4
-delta_ang                                                         0x071F       1
-_base_y                                                           0x0720       4
-_lcd_x                                                            0x0724       1
-_lcd_y                                                            0x0725       1
-_lcd_maxx                                                         0x0726       1
+arrived                                                           0x06EE       8
+kp                                                                0x06F6       4
+ki                                                                0x06FA       4
+kd                                                                0x06FE       4
+error_old                                                         0x0702      16
+error_sum                                                         0x0712      16
+ang_old                                                           0x0722       4
+_base_y                                                           0x0726       4
+_lcd_x                                                            0x072A       1
+_lcd_y                                                            0x072B       1
+_lcd_maxx                                                         0x072C       1
 
 EEPROM Allocation
 Variable                                                          Address   Size

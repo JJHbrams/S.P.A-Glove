@@ -1,0 +1,55 @@
+PID제어기
+
+/*
+  //Update angle (PID)
+  E_OR_F = ((E_flag[seq]?-1:1)+(F_flag[seq]?1:-1))/2;//Extension:-1, Flextion:1, Do noting:0
+  ang_desired = Bend+E_OR_F*delta_ang;//Ext:Bend+delta_ang, Flex:Bend-delta_ang, Stay:Bend
+  error = ang_desired-ang_old[seq];   //error : 0~90
+  error_sum[seq] += error;
+  u = kp*error + ki*error_sum[seq]*((float)(Ts/1000.)) + kd*(error-error_old[seq])/((float)(Ts/1000.));//Control value for OCR1A,OCR3A
+  error_old[seq]=error;
+
+  //Saturation condition...
+  if(u>UPPER)       u=UPPER;
+  else if(u<LOWER)  u=LOWER;
+
+
+  // Input update       
+  /*구버전... (Input-Output ratio calcultate)
+  //Grab&Flextion:r=1, !Grab&Flextion:r=1.4, !Grab&E_flag:r=0.6, !Grab&stay:r=1, Grab&!F_flag:Extension(r=0.6) or stay(r=1)
+  r = (Grab&&F_flag[seq])?1:(((E_flag[seq]?0.2:1)+(F_flag[seq]?1.8:1))/2);  
+  
+  
+  //without PID
+  OCR_in = IN_SPEED;  //Inlet
+  OCR_out = r*OCR_in; //Outlet
+  
+  //with PID
+  OCR_in = u;           //Inlet
+  OCR_out = r*OCR_in;   //Outlet     
+  */    
+     
+  /*신버전...
+  기준 속도를 PID로 구한 후 
+  1. Grab 판정이 나지 않은 경우 Flextion이면 inlet을 높은 비율로 outlet울 낮은 비율로 할당
+  2. Grab 판정이 나지 않은 경우 Extension이면 inlet을 낮은 비율로 outlet울 높은 비율로 할당
+  3. Grab 판정이 난 경우 Flextion이면 inlet/outlet 모두 기준속도사용 
+  4. Grab 판정이 난 경우 Extension이면 inlet을 낮은 비율로 outlet울 높은 비율로 할당  
+  5. 아무런 입력이 없는 경우 동적평형상태를 유지
+  */                 
+  //Grab&Flextion:r=1, !Grab&Flextion:r=1.4, !Grab&E_flag:r=0.6, !Grab&stay:r=1, Grab&!F_flag:Extension(r=0.6) or stay(r=1)
+  r_in = (Grab&&F_flag[seq])?1:(((E_flag[seq]?0.2:1)+(F_flag[seq]?1.8:1))/2);   
+  //Grab&Flextion:r=1, !Grab&Flextion:r=0.6, !Grab&E_flag:r=1.4, !Grab&stay:r=1, Grab&!F_flag:Extension(r=1.4) or stay(r=1)     
+  r_out = (Grab&&F_flag[seq])?1:(((E_flag[seq]?1.8:1)+(F_flag[seq]?0.2:1))/2);      
+  
+  //with PID
+  OCR_in = (int)r_in*u;          //Inlet
+  OCR_out = (int)r_out*u;        //Outlet 
+  
+  //Define action
+  OCR1AH = OCR_in>>8;
+  OCR1AL = OCR_in;
+  OCR3AH = OCR_out>>8;
+  OCR3AL = OCR_out;    
+  
+  */
